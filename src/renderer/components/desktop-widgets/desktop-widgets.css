@@ -1,0 +1,197 @@
+.desktop-widgets-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.desktop-widget-container {
+  position: absolute;
+  pointer-events: auto;
+  user-select: none;
+  touch-action: none;
+  box-sizing: border-box;
+  background: rgba(22, 22, 26, 0.72);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 22px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+  cursor: grab;
+  isolation: isolate;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.desktop-widget-container:active {
+  cursor: grabbing;
+}
+
+.desktop-widget-container.is-locked {
+  cursor: default !important;
+}
+
+.desktop-widget-container.is-dragging {
+  opacity: 0.88;
+  transform: scale(1.03);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  z-index: 1000;
+}
+
+.desktop-widget-container.size-small {
+  width: 144px;
+  height: 144px;
+  padding: 14px;
+}
+
+.desktop-widget-container.size-medium {
+  width: 304px;
+  height: 144px;
+  padding: 16px;
+}
+
+.desktop-widget-container.size-large {
+  width: 304px;
+  height: 304px;
+  padding: 18px;
+}
+
+.desk-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.desk-widget-title {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.desk-context-menu {
+  position: fixed;
+  z-index: 99999;
+  background: rgba(32, 32, 36, 0.92);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 160px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.desk-context-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #eaeaea;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.desk-context-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.desk-context-item.danger {
+  color: #ff453a;
+}
+
+.desk-context-item.danger:hover {
+  background: rgba(255, 69, 58, 0.2);
+}
+
+.desk-context-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.desk-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  pointer-events: auto;
+}
+
+.desk-prompt-card {
+  background: #1c1c1e;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 20px;
+  width: 280px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.desk-prompt-card input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #ffffff;
+  outline: none;
+}
+
+.desk-prompt-card input:focus {
+  border-color: #0a84ff;
+}
+
+.desk-prompt-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.desk-prompt-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+}
+
+.desk-prompt-btn.cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #cccccc;
+}
+
+.desk-prompt-btn.submit {
+  background: #0a84ff;
+  color: #ffffff;
+}

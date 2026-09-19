@@ -1,0 +1,12 @@
+appId: com.dokiii.app
+productName: DOKIII
+directories:
+  output: release
+files:
+  - dist/**/*
+  - package.json
+win:
+  icon: build/icon.ico
+  target:
+    - target: dir
+  signAndEditExecutable: false

@@ -1,0 +1,327 @@
+.halo-root {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9995;
+  user-select: none;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.halo-root.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-18px) scale(0.92);
+}
+
+.halo-pill {
+  background: rgba(12, 12, 16, 0.88);
+  backdrop-filter: blur(40px) saturate(190%);
+  -webkit-backdrop-filter: blur(40px) saturate(190%);
+  border: 0.5px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: width 320ms cubic-bezier(0.16, 1, 0.3, 1), height 320ms cubic-bezier(0.16, 1, 0.3, 1), border-radius 250ms ease, box-shadow 250ms ease, background 250ms ease, padding 250ms ease;
+}
+
+.halo-root.reduced-motion .halo-pill,
+.halo-root.reduced-motion {
+  transition: none !important;
+}
+
+.halo-pill:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.7), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.3);
+}
+
+.halo-pill.state-idle {
+  width: 140px;
+  height: 34px;
+  padding: 4px 10px;
+  gap: 8px;
+}
+
+.halo-pill.state-music {
+  width: 240px;
+  height: 36px;
+  padding: 4px 10px;
+  gap: 8px;
+}
+
+.halo-pill.state-system {
+  width: 210px;
+  height: 36px;
+  padding: 4px 10px;
+  gap: 8px;
+}
+
+.halo-pill.state-notification {
+  width: 220px;
+  height: 36px;
+  padding: 4px 10px;
+  gap: 8px;
+}
+
+.halo-pill.state-expanded {
+  width: 380px;
+  height: 116px;
+  padding: 12px 14px;
+  border-radius: 24px;
+  cursor: default;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 0;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.75), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.28);
+}
+
+.halo-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.halo-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.halo-compact-art {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.halo-compact-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.halo-compact-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.halo-compact-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.halo-compact-subtitle {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.halo-wave {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.halo-wave-bar {
+  width: 2px;
+  background: #0a84ff;
+  border-radius: 1px;
+  animation: haloSoundWave 0.8s ease-in-out infinite alternate;
+}
+
+.halo-wave-bar.b1 { height: 4px; animation-delay: 0.1s; }
+.halo-wave-bar.b2 { height: 10px; animation-delay: 0.3s; }
+.halo-wave-bar.b3 { height: 6px; animation-delay: 0.2s; }
+
+@keyframes haloSoundWave {
+  0% { height: 3px; }
+  100% { height: 11px; }
+}
+
+.halo-exp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.halo-exp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.halo-exp-header-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: -0.1px;
+}
+
+.halo-exp-header-time {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.halo-exp-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.halo-exp-art {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.halo-exp-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.halo-exp-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.halo-exp-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.2px;
+}
+
+.halo-exp-artist {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.halo-exp-seekbar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.halo-exp-seekfill {
+  height: 100%;
+  background: #0a84ff;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.halo-exp-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.halo-exp-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.halo-exp-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.halo-exp-btn.play {
+  width: 32px;
+  height: 32px;
+  background: #0a84ff;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.4);
+}
+
+.halo-exp-btn.play:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+}
+
+.halo-system-bar {
+  width: 60px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.halo-system-bar-fill {
+  height: 100%;
+  background: #0a84ff;
+  border-radius: 2px;
+}
