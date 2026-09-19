@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useWidgetStore } from '../store/widgetStore';
 import { useConfigStore } from '../store/configStore';
+import { useLiquidGlassStore } from '../store/liquidGlassStore';
 import { usePopover } from '../App';
 import WidgetWrapper from './WidgetWrapper';
 import { useDragReorder } from '../hooks/useDragReorder';
@@ -82,6 +83,8 @@ export const Dock: React.FC = () => {
   const baseSize = dock.size || 64;
   const magnification = dock.magnification ?? true;
   const maxScale = dock.magnificationScale || 1.65;
+  const isLiquidGlass = Boolean(dock.liquidGlassEnabled);
+  const dockSample = useLiquidGlassStore((s) => s.getDockSample(position));
 
   const sortedWidgets = Array.from(new Set(widgetOrder)).filter((id) => enabledWidgets.includes(id));
   const pinnedApps = dock.pinnedApps || [];
@@ -216,7 +219,7 @@ export const Dock: React.FC = () => {
     <>
       <div
         ref={dockRef}
-        className={`dock-container macos-dock-style dock-${position}${isAutoHideEnabled ? ' auto-hide' : ''}${isAutoHideEnabled && isVisible ? ' visible' : ''}`}
+        className={`dock-container macos-dock-style dock-${position}${isAutoHideEnabled ? ' auto-hide' : ''}${isAutoHideEnabled && isVisible ? ' visible' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
         onPointerEnter={handleContainerPointerEnter}
         onPointerLeave={handleContainerPointerLeave}
         onPointerMove={onPointerMove}
@@ -231,6 +234,13 @@ export const Dock: React.FC = () => {
           backdropFilter: `blur(${dock.blur || 50}px) saturate(180%)`,
           WebkitBackdropFilter: `blur(${dock.blur || 50}px) saturate(180%)`,
           opacity: isAutoHideEnabled && !isVisible ? 0 : 1,
+          ...(isLiquidGlass && dockSample
+            ? {
+                background: dockSample.bgRgba,
+                borderColor: dockSample.borderColor,
+                boxShadow: dockSample.boxShadow,
+              }
+            : {}),
         }}
       >
         <button

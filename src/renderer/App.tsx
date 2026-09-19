@@ -1,6 +1,7 @@
 import React, { useEffect, createContext, useContext, useState, useCallback } from 'react';
 import { useWidgetStore } from './store/widgetStore';
 import { useConfigStore } from './store/configStore';
+import { useLiquidGlassStore } from './store/liquidGlassStore';
 import Dock from './components/Dock';
 import WidgetLibrary from './components/WidgetLibrary';
 import Settings from './components/Settings';
@@ -29,6 +30,7 @@ export const usePopover = () => useContext(PopoverContext);
 const App: React.FC = () => {
   const initWidget = useWidgetStore((s) => s.init);
   const initConfig = useConfigStore((s) => s.init);
+  const initLiquidGlass = useLiquidGlassStore((s) => s.init);
   const updateConfig = useConfigStore((s) => s.updateConfig);
   const isWidgetLibraryOpen = useConfigStore((s) => s.isWidgetLibraryOpen);
   const isSettingsOpen = useConfigStore((s) => s.isSettingsOpen);
@@ -53,7 +55,8 @@ const App: React.FC = () => {
   useEffect(() => {
     initWidget();
     initConfig();
-  }, [initWidget, initConfig]);
+    initLiquidGlass();
+  }, [initWidget, initConfig, initLiquidGlass]);
 
   useEffect(() => {
     const isModal = isWidgetLibraryOpen || isSettingsOpen || isDokiiiAppOpen;

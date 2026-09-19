@@ -60,5 +60,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   showUninstall: () => ipcRenderer.invoke('setup:showUninstall'),
   getScreenshotsDir: () => ipcRenderer.invoke('filesystem:getScreenshotsDir'),
+  getWallpaperColors: () => ipcRenderer.invoke('wallpaper:getColors'),
+  onWallpaperColorsUpdated: (callback: (palette: any) => void) => {
+    const handler = (_event: any, palette: any) => callback(palette);
+    ipcRenderer.on('wallpaper:colors-updated', handler);
+    return () => ipcRenderer.removeListener('wallpaper:colors-updated', handler);
+  },
   appReady: () => ipcRenderer.send('app:ready'),
 });

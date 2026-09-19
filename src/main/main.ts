@@ -9,6 +9,7 @@ import { registerMediaHandlers } from './ipc/media';
 import { registerProcessHandlers } from './ipc/process';
 import { registerScreenshotHandlers } from './ipc/screenshot';
 import { registerStartupHandlers } from './ipc/startup';
+import { registerWallpaperHandlers, cleanupWallpaperWatcher } from './ipc/wallpaper';
 import { killAllPowerShell } from './utils/powershell';
 import { createTray } from './tray';
 import { DEFAULT_DOCK_CONFIG, DEFAULT_ENABLED_WIDGETS, DEFAULT_PROFILES, WIDGET_REGISTRY } from '../shared/constants';
@@ -46,6 +47,7 @@ app.on('child-process-gone', (_e, details) => {
   logDebug('child-process-gone: ' + JSON.stringify(details));
 });
 app.on('before-quit', () => {
+  cleanupWallpaperWatcher();
   killAllPowerShell();
   logDebug('before-quit fired');
 });
@@ -755,6 +757,7 @@ if (!gotSingleInstanceLock) {
     registerStartupHandlers();
     registerConfigHandlers();
     registerSetupHandlers();
+    registerWallpaperHandlers(() => mainWindow);
 
     ipcMain.on('show-uninstall', () => {
       createUninstallWindow();

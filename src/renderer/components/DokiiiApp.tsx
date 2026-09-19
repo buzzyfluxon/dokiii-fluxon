@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useConfigStore, DokiiiAppTab } from '../store/configStore';
 import { useWidgetStore } from '../store/widgetStore';
+import { useLiquidGlassStore } from '../store/liquidGlassStore';
 import {
   WIDGET_REGISTRY,
   WIDGET_CATEGORIES,
@@ -33,6 +34,8 @@ export const DokiiiApp: React.FC = () => {
   } = useConfigStore();
 
   const { enabledWidgets, toggleWidget } = useWidgetStore();
+  const isLiquidGlass = Boolean(dock.liquidGlassEnabled);
+  const modalSample = useLiquidGlassStore((s) => s.getModalSample());
 
   const [newProfileName, setNewProfileName] = useState('');
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
@@ -556,6 +559,19 @@ export const DokiiiApp: React.FC = () => {
 
         <div className="dokiii-row">
           <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Liquid Glass</span>
+            <span className="dokiii-row-desc">Adaptive translucent glass that subtly refracts the desktop wallpaper</span>
+          </div>
+          <div
+            className={`dokiii-toggle ${dock.liquidGlassEnabled ? 'active' : ''}`}
+            onClick={() => updateConfig({ liquidGlassEnabled: !dock.liquidGlassEnabled })}
+          >
+            <div className="dokiii-toggle-handle" />
+          </div>
+        </div>
+
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
             <span className="dokiii-row-name">Corner Radius</span>
             <span className="dokiii-row-desc">{dock.cornerRadius}px</span>
           </div>
@@ -774,6 +790,23 @@ export const DokiiiApp: React.FC = () => {
       </div>
 
       <div className="dokiii-card">
+        <span className="dokiii-card-title">Appearance</span>
+
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Liquid Glass</span>
+            <span className="dokiii-row-desc">Adaptive translucent glass that subtly refracts the desktop wallpaper</span>
+          </div>
+          <div
+            className={`dokiii-toggle ${dock.liquidGlassEnabled ? 'active' : ''}`}
+            onClick={() => updateConfig({ liquidGlassEnabled: !dock.liquidGlassEnabled })}
+          >
+            <div className="dokiii-toggle-handle" />
+          </div>
+        </div>
+      </div>
+
+      <div className="dokiii-card">
         <span className="dokiii-card-title">Shortcuts & Keybindings</span>
         <div className="dokiii-row">
           <div className="dokiii-row-label">
@@ -922,7 +955,19 @@ export const DokiiiApp: React.FC = () => {
 
   return (
     <div className="dokiii-app-backdrop" onClick={closeDokiiiApp}>
-      <div className={`dokiii-window${isMaximized ? ' is-maximized' : ''}`} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`dokiii-window${isMaximized ? ' is-maximized' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+        style={
+          isLiquidGlass && modalSample
+            ? {
+                background: modalSample.bgRgba,
+                borderColor: modalSample.borderColor,
+                boxShadow: modalSample.boxShadow,
+              }
+            : undefined
+        }
+      >
         <div className="dokiii-sidebar">
           <div className="dokiii-window-controls">
             <button className="dokiii-control-dot close" onClick={closeDokiiiApp} title="Close">

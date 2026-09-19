@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { useWidgetStore } from '../store/widgetStore';
 import { useConfigStore } from '../store/configStore';
+import { useLiquidGlassStore } from '../store/liquidGlassStore';
 import { WIDGET_REGISTRY, WIDGET_CATEGORIES, WidgetCategory, WidgetId } from '../../shared/constants';
 import { WidgetIcon, IconSearch, IconClose, IconMinus, IconMaximize, IconRestore } from './Icons';
 import dokiiiLogo from '../assets/dokiii-logo.jpg';
 
 const WidgetLibrary: React.FC = () => {
   const { enabledWidgets, toggleWidget } = useWidgetStore();
-  const { toggleWidgetLibrary, addDesktopWidget } = useConfigStore();
+  const { toggleWidgetLibrary, addDesktopWidget, dock } = useConfigStore();
+  const isLiquidGlass = Boolean(dock.liquidGlassEnabled);
+  const modalSample = useLiquidGlassStore((s) => s.getModalSample());
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<WidgetCategory | 'all'>('all');
   const [isMaximized, setIsMaximized] = useState(false);
@@ -33,7 +36,18 @@ const WidgetLibrary: React.FC = () => {
 
   return (
     <div className="widget-library-overlay" onClick={(e) => e.target === e.currentTarget && toggleWidgetLibrary()}>
-      <div className={`widget-library${isMaximized ? ' is-maximized' : ''}`}>
+      <div
+        className={`widget-library${isMaximized ? ' is-maximized' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
+        style={
+          isLiquidGlass && modalSample
+            ? {
+                background: modalSample.bgRgba,
+                borderColor: modalSample.borderColor,
+                boxShadow: modalSample.boxShadow,
+              }
+            : undefined
+        }
+      >
         <div className="wl-header">
           <div className="wl-mac-controls">
             <button className="wl-mac-dot close" onClick={toggleWidgetLibrary} title="Close">

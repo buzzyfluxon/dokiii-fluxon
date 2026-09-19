@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useConfigStore } from '../../store/configStore';
+import { useLiquidGlassStore } from '../../store/liquidGlassStore';
 import { DesktopWidgetItem, DesktopWidgetSize, DEFAULT_DESKTOP_WIDGETS } from '../../../shared/constants';
 import { WorldClockWidget } from './WorldClockWidget';
 import { DateDayWidget } from './DateDayWidget';
@@ -38,6 +39,8 @@ export const DesktopWidgetsLayer: React.FC = () => {
 
   const widgets = dock.desktopWidgets || [];
   const isVisible = dock.desktopWidgetsVisible !== false;
+  const isLiquidGlass = Boolean(dock.liquidGlassEnabled);
+  const desktopSample = useLiquidGlassStore((s) => s.getDesktopWidgetsSample());
 
   useEffect(() => {
     if (activeDragId) return;
@@ -224,10 +227,17 @@ export const DesktopWidgetsLayer: React.FC = () => {
         return (
           <div
             key={item.id}
-            className={`desktop-widget-container size-${item.size} ${isDragging ? 'is-dragging' : ''} ${item.locked ? 'is-locked' : ''}`}
+            className={`desktop-widget-container size-${item.size} ${isDragging ? 'is-dragging' : ''} ${item.locked ? 'is-locked' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
             style={{
               left: `${pos.x}px`,
               top: `${pos.y}px`,
+              ...(isLiquidGlass && desktopSample
+                ? {
+                    background: desktopSample.bgRgba,
+                    borderColor: desktopSample.borderColor,
+                    boxShadow: isDragging ? undefined : desktopSample.boxShadow,
+                  }
+                : {}),
             }}
             onPointerDown={(e) => handlePointerDown(item.id, e)}
             onPointerMove={handlePointerMove}

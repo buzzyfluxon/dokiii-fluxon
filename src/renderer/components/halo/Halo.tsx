@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useConfigStore } from '../../store/configStore';
+import { useLiquidGlassStore } from '../../store/liquidGlassStore';
 import { useMediaStore } from '../../store/mediaStore';
 import dokiiiLogo from '../../assets/dokiii-logo.jpg';
 import {
@@ -21,6 +22,8 @@ interface EphemeralEvent {
 export const Halo: React.FC = () => {
   const dock = useConfigStore((s) => s.dock);
   const halo = dock.halo;
+  const isLiquidGlass = Boolean(dock.liquidGlassEnabled);
+  const haloSample = useLiquidGlassStore((s) => s.getHaloSample());
 
   const [isExpanded, setIsExpanded] = useState(false);
   const { mediaInfo, position: mediaPosition, duration: mediaDuration, controlMedia, seekMedia } = useMediaStore();
@@ -351,8 +354,17 @@ export const Halo: React.FC = () => {
       onPointerLeave={handlePointerLeave}
     >
       <div
-        className={`halo-pill ${getPillStateClass()}`}
+        className={`halo-pill ${getPillStateClass()}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
         onClick={handlePillClick}
+        style={
+          isLiquidGlass && haloSample
+            ? {
+                background: haloSample.bgRgba,
+                borderColor: haloSample.borderColor,
+                boxShadow: haloSample.boxShadow,
+              }
+            : undefined
+        }
       >
         {!isExpanded && (
           <div className="halo-logo">

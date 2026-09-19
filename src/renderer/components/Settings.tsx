@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useConfigStore } from '../store/configStore';
+import { useLiquidGlassStore } from '../store/liquidGlassStore';
 import { IconClose, IconPlus, IconTrash, IconMinus, IconMaximize, IconRestore } from './Icons';
 import dokiiiLogo from '../assets/dokiii-logo.jpg';
 import AddAppModal from './AddAppModal';
@@ -39,11 +40,25 @@ export const Settings: React.FC = () => {
   };
 
   const pinnedApps = dock.pinnedApps || [];
+  const isLiquidGlass = Boolean(dock.liquidGlassEnabled);
+  const modalSample = useLiquidGlassStore((s) => s.getModalSample());
 
   return (
     <>
       <div className="settings-overlay" onClick={(e) => e.target === e.currentTarget && toggleSettings()}>
-        <div className={`settings-panel${isMaximized ? ' is-maximized' : ''}`} style={isMaximized ? undefined : { maxWidth: '640px', maxHeight: '86vh' }}>
+        <div
+          className={`settings-panel${isMaximized ? ' is-maximized' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
+          style={{
+            ...(isMaximized ? undefined : { maxWidth: '640px', maxHeight: '86vh' }),
+            ...(isLiquidGlass && modalSample
+              ? {
+                  background: modalSample.bgRgba,
+                  borderColor: modalSample.borderColor,
+                  boxShadow: modalSample.boxShadow,
+                }
+              : {}),
+          }}
+        >
           <div className="settings-header">
             <div className="settings-mac-controls">
               <button className="settings-mac-dot close" onClick={toggleSettings} title="Close">
@@ -271,6 +286,21 @@ export const Settings: React.FC = () => {
                 <button
                   className={`setting-toggle${dock.launchAtStartup ? ' on' : ''}`}
                   onClick={() => handleToggle('launchAtStartup')}
+                />
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <div className="settings-section-title">Appearance</div>
+
+              <div className="setting-row">
+                <div>
+                  <div className="setting-label">Liquid Glass</div>
+                  <div className="setting-desc">Adapt glass tint and refraction to your desktop wallpaper</div>
+                </div>
+                <button
+                  className={`setting-toggle${dock.liquidGlassEnabled ? ' on' : ''}`}
+                  onClick={() => updateConfig({ liquidGlassEnabled: !dock.liquidGlassEnabled })}
                 />
               </div>
             </div>

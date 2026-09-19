@@ -61,7 +61,36 @@ export interface ElectronAPI {
   onShowApp(callback: () => void): () => void;
   showUninstall(): Promise<void>;
   getScreenshotsDir(): Promise<string>;
+  getWallpaperColors(): Promise<WallpaperPalette>;
+  onWallpaperColorsUpdated(callback: (palette: WallpaperPalette) => void): () => void;
   appReady?(): void;
+}
+
+export interface RegionSample {
+  r: number;
+  g: number;
+  b: number;
+  luminance: number;
+  isLight: boolean;
+  tintR: number;
+  tintG: number;
+  tintB: number;
+  alpha: number;
+  bgRgba: string;
+  borderColor: string;
+  boxShadow: string;
+  highlightColor: string;
+}
+
+export interface WallpaperPalette {
+  dominant: RegionSample;
+  dockBottom: RegionSample;
+  dockLeft: RegionSample;
+  dockRight: RegionSample;
+  halo: RegionSample;
+  desktopWidgets: RegionSample;
+  modal: RegionSample;
+  timestamp: number;
 }
 
 declare global {

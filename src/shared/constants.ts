@@ -183,6 +183,7 @@ export const DEFAULT_DOCK_CONFIG = {
   desktopWidgetsVisible: true,
   activeProfileId: 'default',
   dynamicIslandEnabled: false,
+  liquidGlassEnabled: false,
   halo: {
     enabled: true,
     displayMode: 'always' as 'always' | 'active',

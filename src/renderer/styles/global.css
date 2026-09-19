@@ -79,3 +79,14 @@ img {
   font: inherit;
   outline: none;
 }
+
+.liquid-glass-active {
+  backdrop-filter: blur(48px) saturate(185%) contrast(105%) !important;
+  -webkit-backdrop-filter: blur(48px) saturate(185%) contrast(105%) !important;
+  transition: background 600ms cubic-bezier(0.16, 1, 0.3, 1), border-color 600ms ease, box-shadow 600ms ease !important;
+}
+
+.liquid-glass-light-text {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.45);
+}
