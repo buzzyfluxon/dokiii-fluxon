@@ -13,11 +13,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fluxonbuzz/dokiii/releases/latest">
-    <img src="https://img.shields.io/github/v/release/fluxonbuzz/dokiii?style=for-the-badge&color=b39ddb&label=version" alt="Latest Release" />
+  <a href="https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest">
+    <img src="https://img.shields.io/github/v/release/buzzyfluxon/dokiii-fluxon?style=for-the-badge&color=b39ddb&label=version" alt="Latest Release" />
   </a>
-  <a href="https://github.com/fluxonbuzz/dokiii/releases">
-    <img src="https://img.shields.io/github/downloads/fluxonbuzz/dokiii/total?style=for-the-badge&color=b39ddb&label=downloads" alt="Downloads" />
+  <a href="https://github.com/buzzyfluxon/dokiii-fluxon/releases">
+    <img src="https://img.shields.io/github/downloads/buzzyfluxon/dokiii-fluxon/total?style=for-the-badge&color=b39ddb&label=downloads" alt="Downloads" />
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-b39ddb?style=for-the-badge" alt="License" />
@@ -30,7 +30,7 @@
 ## Download
 
 <p align="center">
-  <a href="https://github.com/fluxonbuzz/dokiii/releases/latest/download/DOKIII.exe">
+  <a href="https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest/download/DOKIII.exe">
     <img src="https://img.shields.io/badge/Download-DOKIII.exe-b39ddb?style=for-the-badge&logo=windows&logoColor=white" alt="Download DOKIII.exe" />
   </a>
   <br/>
@@ -41,7 +41,7 @@ Download `DOKIII.exe` and run it. A short setup wizard installs DOKIII to your u
 
 Windows SmartScreen may show a warning the first time, because the app is not code-signed. Select **More info**, then **Run anyway**.
 
-You can also browse every version on the [Releases page](https://github.com/fluxonbuzz/dokiii/releases).
+You can also browse every version on the [Releases page](https://github.com/buzzyfluxon/dokiii-fluxon/releases).
 
 ---
 
@@ -56,7 +56,7 @@ You can also browse every version on the [Releases page](https://github.com/flux
 ## How to Use
 
 ### Getting Started
-1. Download `DOKIII.exe` from [Releases](https://github.com/fluxonbuzz/dokiii/releases/latest).
+1. Download `DOKIII.exe` from [Releases](https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest).
 2. Run it and follow the setup wizard. The dock and widgets appear on your desktop when it finishes.
 
 ### Dock
@@ -89,7 +89,7 @@ Open the Control Center and choose **Uninstall**, or use **Uninstall DOKIII** in
 
 ### Run in development
 ```bash
-git clone https://github.com/fluxonbuzz/dokiii.git
+git clone https://github.com/buzzyfluxon/dokiii-fluxon.git
 cd dokiii
 npm install
 npm run dev

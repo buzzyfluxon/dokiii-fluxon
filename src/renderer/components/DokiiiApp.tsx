@@ -10,6 +10,7 @@ import {
   DesktopWidgetSize,
 } from '../../shared/constants';
 import { IconClose, IconMinus, IconMaximize, IconRestore } from './Icons';
+import appIcon from '../assets/icon.png';
 import './dokiii-app.css';
 
 export const DokiiiApp: React.FC = () => {
@@ -864,13 +865,10 @@ export const DokiiiApp: React.FC = () => {
             justifyContent: 'center',
             boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
             margin: '0 auto',
-            fontSize: '32px',
-            fontWeight: 800,
-            letterSpacing: '-1px',
-            color: '#ffffff',
+            overflow: 'hidden',
           }}
         >
-          D
+          <img src={appIcon} alt="DOKIII" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
       </div>
       <span style={{ fontSize: '24px', fontWeight: 700 }}>DOKIII</span>
@@ -879,7 +877,7 @@ export const DokiiiApp: React.FC = () => {
         A refined macOS-style Desktop Dock and interactive Desktop Widgets system designed exclusively for Windows.
       </p>
       <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '4px', display: 'block' }}>
-        Developer: fluxonbuzz
+        Developer: buzzyfluxon
       </span>
 
       <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
@@ -887,7 +885,7 @@ export const DokiiiApp: React.FC = () => {
           className="dokiii-btn secondary"
           onClick={() => {
             try {
-              window.electronAPI?.openUrl('https://github.com/fluxonbuzz/dokiii');
+              window.electronAPI?.openUrl('https://github.com/buzzyfluxon/dokiii-fluxon');
             } catch (_) {}
           }}
         >
@@ -897,7 +895,7 @@ export const DokiiiApp: React.FC = () => {
           className="dokiii-btn secondary"
           onClick={() => {
             try {
-              window.electronAPI?.openUrl('https://github.com/fluxonbuzz/dokiii/releases/latest');
+              window.electronAPI?.openUrl('https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest');
             } catch (_) {}
           }}
         >

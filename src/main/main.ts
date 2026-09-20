@@ -548,32 +548,11 @@ function createWindow() {
     } catch {}
   }
 
-  const loginItemSettings = app.getLoginItemSettings();
-  const isStartupLaunch =
-    process.argv.includes('--startup') ||
-    process.argv.includes('--hidden') ||
-    Boolean(loginItemSettings.wasOpenedAtLogin) ||
-    Boolean(loginItemSettings.wasOpenedAsHidden);
-
-  let initialAppShown = false;
-  const triggerInitialApp = () => {
-    if (initialAppShown || isStartupLaunch || !mainWindow) return;
-    initialAppShown = true;
-    mainWindow.setSkipTaskbar(false);
-    mainWindow.setAlwaysOnTop(true);
-    mainWindow.moveTop();
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send('dock:showApp');
-  };
-
   mainWindow.webContents.on('did-finish-load', () => {
     logDebug('did-finish-load fired');
-    if (isStartupLaunch && mainWindow) {
+    if (mainWindow) {
       mainWindow.setSkipTaskbar(true);
       mainWindow.show();
-    } else {
-      triggerInitialApp();
     }
   });
 
@@ -581,9 +560,6 @@ function createWindow() {
 
   ipcMain.on('app:ready', () => {
     logDebug('app:ready received');
-    if (!isStartupLaunch) {
-      triggerInitialApp();
-    }
   });
 
   ipcMain.on('show-uninstall', () => {

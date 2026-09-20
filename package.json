@@ -1,13 +1,13 @@
 {
   "name": "dokiii",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "description": "DOKIII — a macOS-style dock, floating music player and desktop widgets for Windows",
   "main": "dist/main/main.js",
   "author": "fluxonbuzz",
-  "homepage": "https://github.com/fluxonbuzz/dokiii",
+  "homepage": "https://github.com/buzzyfluxon/dokiii-fluxon",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fluxonbuzz/dokiii.git"
+    "url": "https://github.com/buzzyfluxon/dokiii-fluxon.git"
   },
   "scripts": {
     "dev": "concurrently \"vite\" \"tsc -p tsconfig.node.json --watch\" \"electron .\"",
