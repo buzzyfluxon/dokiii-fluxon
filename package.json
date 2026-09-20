@@ -1,6 +1,6 @@
 {
   "name": "dokiii",
-  "version": "1.2.1",
+  "version": "1.3.1",
   "description": "DOKIII — a macOS-style dock, floating music player and desktop widgets for Windows",
   "main": "dist/main/main.js",
   "author": "fluxonbuzz",
