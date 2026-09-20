@@ -162,6 +162,7 @@ function installAppFiles(): string {
     'DOKIII'
   );
   const targetExe = path.join(targetDir, 'DOKIII.exe');
+  const markerPath = path.join(targetDir, '.install-complete');
 
   if (app.isPackaged && currentDir.toLowerCase() !== targetDir.toLowerCase()) {
     try {
@@ -169,6 +170,7 @@ function installAppFiles(): string {
         fs.mkdirSync(targetDir, { recursive: true });
       }
       const files = fs.readdirSync(currentDir);
+      let hadFailure = false;
       for (const file of files) {
         const srcFile = path.join(currentDir, file);
         const dstFile = path.join(targetDir, file);
@@ -179,6 +181,17 @@ function installAppFiles(): string {
           } else {
             fs.copyFileSync(srcFile, dstFile);
           }
+        } catch {
+          hadFailure = true;
+        }
+      }
+      if (hadFailure) {
+        try {
+          fs.rmSync(markerPath, { force: true });
+        } catch {}
+      } else {
+        try {
+          fs.writeFileSync(markerPath, app.getVersion());
         } catch {}
       }
       return targetExe;
@@ -187,6 +200,12 @@ function installAppFiles(): string {
     }
   }
   return currentExe;
+}
+
+function isInstallComplete(targetDir: string): boolean {
+  const targetExe = path.join(targetDir, 'DOKIII.exe');
+  const markerPath = path.join(targetDir, '.install-complete');
+  return fs.existsSync(targetExe) && fs.existsSync(markerPath);
 }
 
 function registerWindowsUninstall(exePath: string): void {
@@ -810,13 +829,13 @@ if (!gotSingleInstanceLock) {
     );
     const currentExe = getAppExePath();
     const currentDir = path.dirname(currentExe);
+    const targetExe = path.join(targetDir, 'DOKIII.exe');
     const isRunningFromInstalledDir = currentDir.toLowerCase() === targetDir.toLowerCase();
 
     const isSetupDone = store.get('setupComplete') as boolean;
     logDebug('whenReady: isSetupDone=' + isSetupDone);
     if (isSetupDone) {
-      const targetExe = path.join(targetDir, 'DOKIII.exe');
-      if (app.isPackaged && !isRunningFromInstalledDir && fs.existsSync(targetExe)) {
+      if (app.isPackaged && !isRunningFromInstalledDir && isInstallComplete(targetDir)) {
         execFile(targetExe);
         app.quit();
         return;

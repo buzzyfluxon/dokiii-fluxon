@@ -2,6 +2,10 @@
   <img src="assets/showcase-banner.png" alt="DOKIII Preview" width="100%" />
 </p>
 
+<p align="center">
+  <img src="assets/app-logo.png" alt="DOKIII Logo" width="96" />
+</p>
+
 <h1 align="center">DOKIII</h1>
 
 <p align="center">
@@ -46,36 +50,6 @@ You can also browse every version on the [Releases page](https://github.com/flux
 - **macOS-Style Dock**: An animated bottom or side dock with fluid magnification, app badges, and quick folder access, including Downloads and the Recycle Bin.
 - **Halo and Floating Music**: Shows the current song, artist, and album art from Spotify and Windows media players, with playback controls.
 - **Desktop Widgets**: Glanceable widgets for world time, analog clock, calendar, system health (CPU, RAM, SSD), battery, and volume.
-
-## Screenshots
-
-<p align="center">
-  <img src="assets/dock-overview.png" alt="DOKIII Dock and Downloads" width="100%" />
-</p>
-
-<p align="center">
-  <em>Dock with app shortcuts, quick downloads access, and the Recycle Bin</em>
-</p>
-
-<br />
-
-<p align="center">
-  <img src="assets/desktop-widgets.png" alt="Desktop Widgets" width="100%" />
-</p>
-
-<p align="center">
-  <em>Desktop widgets for system stats, clock, calendar, and battery</em>
-</p>
-
-<br />
-
-<p align="center">
-  <img src="assets/control-center.png" alt="Control Center and Settings" width="100%" />
-</p>
-
-<p align="center">
-  <em>Control Center for customizing widgets, dock magnification, and positions</em>
-</p>
 
 ---
 
