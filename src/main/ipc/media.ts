@@ -1,26 +1,38 @@
 import { ipcMain } from 'electron';
 import { runPowerShell } from '../utils/powershell';
+import { PROFILE, pcount } from '../utils/profiler';
 
 export function registerMediaHandlers() {
   let cachedMediaInfo: any = null;
   let lastMediaFetch = 0;
   let inFlightFetch: Promise<any> | null = null;
+  let lastSignature = '';
 
   ipcMain.handle('media:getInfo', async () => {
     const now = Date.now();
     const ttl = cachedMediaInfo?.isPlaying ? 2000 : 7500;
     if (now - lastMediaFetch < ttl) {
+      if (PROFILE) pcount('media.served.cacheWithinTtl');
       return cachedMediaInfo;
     }
     if (inFlightFetch !== null) {
       if (cachedMediaInfo !== null) {
+        if (PROFILE) pcount('media.served.staleWhileInFlight');
         return cachedMediaInfo;
       }
+      if (PROFILE) pcount('media.served.awaitedInFlight');
       return inFlightFetch;
     }
     lastMediaFetch = now;
+    if (PROFILE) pcount('media.served.newFetch');
+
+    const previousMediaInfo = cachedMediaInfo;
+    const lastArtKey = previousMediaInfo
+      ? `${String(previousMediaInfo.title ?? '').replace(/'/g, "''")}|${String(previousMediaInfo.artist ?? '').replace(/'/g, "''")}`
+      : '';
 
     const script = `
+$lastArtKey = '${lastArtKey}'
 try {
   Add-Type -AssemblyName System.Runtime.WindowsRuntime
   $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -like 'IAsyncOperation*' })[0]
@@ -54,7 +66,11 @@ try {
       $source = $session.SourceAppUserModelId
       $playback = $session.GetPlaybackInfo()
 
+      $trackArtKey = "$($props.Title)|$($props.Artist)"
       $thumbBase64 = $null
+      if ($trackArtKey -eq $lastArtKey) {
+        $thumbBase64 = '__SAME__'
+      } else {
       try {
         if ($props.Thumbnail) {
           $streamOp = $props.Thumbnail.OpenReadAsync()
@@ -73,6 +89,7 @@ try {
           }
         }
       } catch {}
+      }
 
       $app = "media"
       if ($source -match "Spotify") { $app = "spotify" }
@@ -129,10 +146,22 @@ try {
         const output = await runPowerShell(script, 3000);
         lastMediaFetch = Date.now();
         if (!output) {
+          if (PROFILE) pcount('media.fetch.emptyOutput');
           cachedMediaInfo = null;
           return null;
         }
+        const parseStart = PROFILE ? performance.now() : 0;
         cachedMediaInfo = JSON.parse(output);
+        if (cachedMediaInfo && cachedMediaInfo.albumArt === '__SAME__') {
+          cachedMediaInfo.albumArt = previousMediaInfo ? previousMediaInfo.albumArt : null;
+        }
+        if (PROFILE) {
+          pcount('media.fetch.outputChars', output.length);
+          pcount('media.fetch.parseMs', performance.now() - parseStart);
+          const signature = `${cachedMediaInfo.title}|${cachedMediaInfo.artist}|${cachedMediaInfo.isPlaying}|${cachedMediaInfo.appName}|${cachedMediaInfo.albumArt ? cachedMediaInfo.albumArt.length : 0}`;
+          pcount(signature === lastSignature ? 'media.fetch.payloadUnchanged' : 'media.fetch.payloadChanged');
+          lastSignature = signature;
+        }
         return cachedMediaInfo;
       } catch {
         lastMediaFetch = Date.now();

@@ -45,6 +45,7 @@ export function registerFilesystemHandlers() {
           const filePath = path.join(downloadsPath, f);
           try {
             const stat = fs.statSync(filePath);
+            if (!stat.isFile()) return null;
             return {
               name: f,
               path: filePath,
@@ -55,7 +56,7 @@ export function registerFilesystemHandlers() {
             return null;
           }
         })
-        .filter((f): f is NonNullable<typeof f> => f !== null && fs.statSync(f.path).isFile())
+        .filter((f): f is NonNullable<typeof f> => f !== null)
         .sort((a, b) => b.modified - a.modified)
         .slice(0, 20);
       return files;
@@ -73,6 +74,7 @@ export function registerFilesystemHandlers() {
           const filePath = path.join(screenshotsPath, f);
           try {
             const stat = fs.statSync(filePath);
+            if (!stat.isFile()) return null;
             return {
               name: f,
               path: filePath,
@@ -82,7 +84,7 @@ export function registerFilesystemHandlers() {
             return null;
           }
         })
-        .filter((f): f is NonNullable<typeof f> => f !== null && fs.statSync(f.path).isFile())
+        .filter((f): f is NonNullable<typeof f> => f !== null)
         .sort((a, b) => b.modified - a.modified)
         .slice(0, 10);
       return files;

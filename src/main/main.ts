@@ -11,9 +11,12 @@ import { registerScreenshotHandlers } from './ipc/screenshot';
 import { registerStartupHandlers } from './ipc/startup';
 import { registerWallpaperHandlers, cleanupWallpaperWatcher } from './ipc/wallpaper';
 import { killAllPowerShell } from './utils/powershell';
+import { PROFILE, instrumentIpc, startProfiler } from './utils/profiler';
 import { createTray } from './tray';
 import { DOKIII_ICON_DATA_URL } from './utils/icon';
 import { DEFAULT_DOCK_CONFIG, DEFAULT_ENABLED_WIDGETS, DEFAULT_PROFILES, WIDGET_REGISTRY } from '../shared/constants';
+
+instrumentIpc();
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
@@ -515,8 +518,13 @@ function createWindow() {
   if (devServerUrl) {
     mainWindow.loadURL(devServerUrl);
   } else {
-    mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+    mainWindow.loadFile(
+      path.join(__dirname, '..', 'renderer', 'index.html'),
+      PROFILE ? { query: { profile: '1' } } : undefined
+    );
   }
+
+  startProfiler(() => mainWindow);
 
   mainWindow.on('unresponsive', () => {
     logDebug('mainWindow unresponsive');

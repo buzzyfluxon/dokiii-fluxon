@@ -1,4 +1,5 @@
 import { execFile, ChildProcess } from 'child_process';
+import { PROFILE, pcount, psTag } from './profiler';
 
 const activeProcesses = new Set<ChildProcess>();
 let activeCount = 0;
@@ -9,6 +10,7 @@ interface QueuedRequest {
   script: string;
   timeoutMs: number;
   resolve: (value: string) => void;
+  queuedAt: number;
 }
 
 const queue: QueuedRequest[] = [];
@@ -34,11 +36,15 @@ function processQueue(): void {
   if (activeCount >= MAX_CONCURRENT) return;
   const next = queue.shift();
   if (!next) return;
+  if (PROFILE) pcount('ps.queueWaitMs', Date.now() - next.queuedAt);
   runNow(next.script, next.timeoutMs).then(next.resolve);
 }
 
 function runNow(script: string, timeoutMs: number): Promise<string> {
   activeCount++;
+  const tag = PROFILE ? psTag(script) : '';
+  const startedAt = PROFILE ? Date.now() : 0;
+  if (PROFILE) pcount(`ps.${tag}.spawns`);
 
   return new Promise((resolve) => {
     let timer: NodeJS.Timeout | null = null;
@@ -48,6 +54,7 @@ function runNow(script: string, timeoutMs: number): Promise<string> {
     const finalize = (output: string) => {
       if (settled) return;
       settled = true;
+      if (PROFILE) pcount(`ps.${tag}.wallMs`, Date.now() - startedAt);
       if (timer) {
         clearTimeout(timer);
         timer = null;
@@ -71,6 +78,7 @@ function runNow(script: string, timeoutMs: number): Promise<string> {
     };
 
     timer = setTimeout(() => {
+      if (PROFILE) pcount(`ps.${tag}.timeouts`);
       killProc();
       finalize('');
     }, timeoutMs);
@@ -105,11 +113,13 @@ function runNow(script: string, timeoutMs: number): Promise<string> {
 export function runPowerShell(script: string, timeoutMs = 4500): Promise<string> {
   if (activeCount >= MAX_CONCURRENT) {
     return new Promise((resolve) => {
+      if (PROFILE) pcount('ps.queued');
       if (queue.length >= MAX_QUEUE) {
+        if (PROFILE) pcount('ps.droppedFromQueue');
         const dropped = queue.shift();
         dropped?.resolve('');
       }
-      queue.push({ script, timeoutMs, resolve });
+      queue.push({ script, timeoutMs, resolve, queuedAt: Date.now() });
     });
   }
   return runNow(script, timeoutMs);

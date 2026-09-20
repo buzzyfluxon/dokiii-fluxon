@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useConfigStore } from '../../store/configStore';
 import { useLiquidGlassStore } from '../../store/liquidGlassStore';
 import { useMediaStore } from '../../store/mediaStore';
+import { useRenderProfile } from '../../profile';
 import dokiiiLogo from '../../assets/dokiii-logo.jpg';
 import {
   IconMusic,
@@ -19,14 +20,51 @@ interface EphemeralEvent {
   value?: number;
 }
 
+const formatHaloTime = (secs: number) => {
+  if (isNaN(secs) || secs < 0) secs = 0;
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+};
+
+const HaloTimeLabel: React.FC = () => {
+  const position = useMediaStore((s) => s.position);
+  const duration = useMediaStore((s) => s.duration);
+  return <>{duration > 0 ? `${formatHaloTime(position)} / ${formatHaloTime(duration)}` : ''}</>;
+};
+
+const HaloSeekBar: React.FC<{ seekMedia: (position: number) => void }> = ({ seekMedia }) => {
+  const position = useMediaStore((s) => s.position);
+  const duration = useMediaStore((s) => s.duration);
+  const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (position / duration) * 100)) : 0;
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (!duration || duration <= 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const targetSec = Math.floor(ratio * duration);
+    seekMedia(targetSec);
+  };
+
+  return (
+    <div className="halo-exp-seekbar" onClick={handleSeek}>
+      <div className="halo-exp-seekfill" style={{ width: `${progressPercent}%` }} />
+    </div>
+  );
+};
+
 export const Halo: React.FC = () => {
+  useRenderProfile('Halo');
   const dock = useConfigStore((s) => s.dock);
   const halo = dock.halo;
   const isLiquidGlass = Boolean(dock.liquidGlassEnabled);
   const haloSample = useLiquidGlassStore((s) => s.getHaloSample());
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const { mediaInfo, position: mediaPosition, duration: mediaDuration, controlMedia, seekMedia } = useMediaStore();
+  const mediaInfo = useMediaStore((s) => s.mediaInfo);
+  const controlMedia = useMediaStore((s) => s.controlMedia);
+  const seekMedia = useMediaStore((s) => s.seekMedia);
   const [ephemeralEvent, setEphemeralEvent] = useState<EphemeralEvent | null>(null);
   const prevVolumeRef = useRef<number | null>(null);
   const prevMuteRef = useRef<boolean | null>(null);
@@ -195,26 +233,6 @@ export const Halo: React.FC = () => {
     await controlMedia(action);
   };
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    if (!mediaDuration || mediaDuration <= 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const targetSec = Math.floor(ratio * mediaDuration);
-    seekMedia(targetSec);
-  };
-
-  const formatTime = (secs: number) => {
-    if (isNaN(secs) || secs < 0) secs = 0;
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  const progressPercent = mediaDuration > 0
-    ? Math.min(100, Math.max(0, (mediaPosition / mediaDuration) * 100))
-    : (mediaInfo?.isPlaying ? 35 : 0);
-
   const getPillStateClass = () => {
     if (isExpanded) return 'state-expanded';
     if (ephemeralEvent) {
@@ -309,7 +327,7 @@ export const Halo: React.FC = () => {
             </span>
           </div>
           <span className="halo-exp-header-time">
-            {mediaDuration > 0 ? `${formatTime(mediaPosition)} / ${formatTime(mediaDuration)}` : ''}
+            <HaloTimeLabel />
           </span>
         </div>
 
@@ -325,9 +343,7 @@ export const Halo: React.FC = () => {
           <div className="halo-exp-info">
             <span className="halo-exp-title">{title}</span>
             <span className="halo-exp-artist">{artist}</span>
-            <div className="halo-exp-seekbar" onClick={handleSeek}>
-              <div className="halo-exp-seekfill" style={{ width: `${progressPercent}%` }} />
-            </div>
+            <HaloSeekBar seekMedia={seekMedia} />
           </div>
 
           <div className="halo-exp-controls">

@@ -12,8 +12,10 @@ import {
 } from '../components/Icons';
 
 import { useMediaStore } from '../store/mediaStore';
+import { useRenderProfile } from '../profile';
 
 export const MediaPlayerWidget: React.FC = () => {
+  useRenderProfile('MediaPlayerWidget');
   const { mediaInfo, position, duration, controlMedia, seekMedia } = useMediaStore();
   const { activePopover, openPopover, closePopover } = usePopover();
   const popoverRef = useRef<HTMLDivElement>(null);
