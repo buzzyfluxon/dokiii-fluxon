@@ -35,22 +35,13 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Package Windows executable
+      - name: Package single-file executable
         run: npm run pack
-
-      - name: Archive release package
-        shell: pwsh
-        run: |
-          $tag = if ($env:GITHUB_REF_NAME) { $env:GITHUB_REF_NAME } else { "v1.0.0" }
-          $zipName = "DOKIII-${tag}-windows-x64.zip"
-          Compress-Archive -Path "release/DOKIII/*" -DestinationPath "release/$zipName" -Force
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            release/DOKIII-*-windows-x64.zip
-            release/DOKIII/DOKIII.exe
+          files: release/DOKIII.exe
           generate_release_notes: true
           draft: false
           prerelease: false

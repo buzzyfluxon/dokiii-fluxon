@@ -30,8 +30,8 @@ export const Halo: React.FC = () => {
   const [ephemeralEvent, setEphemeralEvent] = useState<EphemeralEvent | null>(null);
   const prevVolumeRef = useRef<number | null>(null);
   const prevMuteRef = useRef<boolean | null>(null);
-  const prevScreenshotCountRef = useRef<number | null>(null);
-  const prevDownloadCountRef = useRef<number | null>(null);
+  const prevNewestScreenshotRef = useRef<{ name: string; modified: number } | null>(null);
+  const prevNewestDownloadRef = useRef<{ name: string; modified: number } | null>(null);
   const prevBatteryRef = useRef<{ percent: number; isCharging: boolean } | null>(null);
 
   const haloRef = useRef<HTMLDivElement>(null);
@@ -97,29 +97,41 @@ export const Halo: React.FC = () => {
       try {
         if (halo.showScreenshots && window.electronAPI?.getRecentScreenshots) {
           const sc = await window.electronAPI.getRecentScreenshots();
-          if (mounted && sc) {
-            if (prevScreenshotCountRef.current !== null && sc.length > prevScreenshotCountRef.current) {
+          if (mounted && sc && sc.length > 0) {
+            const newest = sc[0];
+            const prev = prevNewestScreenshotRef.current;
+            if (
+              prev &&
+              (newest.name !== prev.name || newest.modified !== prev.modified) &&
+              newest.modified > prev.modified
+            ) {
               triggerEphemeral({
                 type: 'screenshot',
                 title: 'Screenshot Captured',
-                subtitle: sc[0]?.name || 'Saved to Pictures',
+                subtitle: newest.name || 'Saved to Pictures',
               });
             }
-            prevScreenshotCountRef.current = sc.length;
+            prevNewestScreenshotRef.current = { name: newest.name, modified: newest.modified };
           }
         }
 
         if (halo.showDownloads && window.electronAPI?.getDownloads) {
           const dl = await window.electronAPI.getDownloads();
-          if (mounted && dl) {
-            if (prevDownloadCountRef.current !== null && dl.length > prevDownloadCountRef.current) {
+          if (mounted && dl && dl.length > 0) {
+            const newest = dl[0];
+            const prev = prevNewestDownloadRef.current;
+            if (
+              prev &&
+              (newest.name !== prev.name || newest.modified !== prev.modified) &&
+              newest.modified > prev.modified
+            ) {
               triggerEphemeral({
                 type: 'download',
                 title: 'Download Finished',
-                subtitle: dl[0]?.name || 'Saved to Downloads',
+                subtitle: newest.name || 'Saved to Downloads',
               });
             }
-            prevDownloadCountRef.current = dl.length;
+            prevNewestDownloadRef.current = { name: newest.name, modified: newest.modified };
           }
         }
       } catch (_) {}

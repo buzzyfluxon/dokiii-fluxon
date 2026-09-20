@@ -1,12 +1,21 @@
 appId: com.dokiii.app
 productName: DOKIII
+copyright: Copyright (c) 2026 fluxonbuzz
 directories:
   output: release
 files:
   - dist/**/*
   - package.json
+extraResources:
+  - from: build
+    to: build
+afterPack: scripts/after-pack.js
 win:
   icon: build/icon.ico
-  target:
-    - target: dir
   signAndEditExecutable: false
+  target:
+    - target: portable
+      arch: x64
+portable:
+  artifactName: DOKIII.exe
+  requestExecutionLevel: user

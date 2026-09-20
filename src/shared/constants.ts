@@ -137,13 +137,13 @@ export interface DockAppItem {
 }
 
 export const DEFAULT_PINNED_APPS: DockAppItem[] = [
-  { id: 'finder', name: 'Finder', path: 'explorer.exe', iconType: 'finder', running: true },
-  { id: 'safari', name: 'Safari', path: 'https://www.google.com', iconType: 'safari', running: true },
+  { id: 'finder', name: 'Finder', path: 'explorer.exe', iconType: 'finder' },
+  { id: 'safari', name: 'Safari', path: 'https://www.google.com', iconType: 'safari' },
   { id: 'mail', name: 'Mail', path: 'mailto:', iconType: 'mail' },
-  { id: 'terminal', name: 'Terminal', path: 'wt.exe', iconType: 'terminal', running: true },
-  { id: 'calendar', name: 'Calendar', path: 'calendar', iconType: 'calendar', running: true },
+  { id: 'terminal', name: 'Terminal', path: 'wt.exe', iconType: 'terminal' },
+  { id: 'calendar', name: 'Calendar', path: 'calendar', iconType: 'calendar' },
   { id: 'photos', name: 'Photos', path: 'ms-photos:', iconType: 'photos' },
-  { id: 'music', name: 'Music', path: 'spotify', iconType: 'music', running: true },
+  { id: 'music', name: 'Music', path: 'spotify', iconType: 'music' },
   { id: 'settings', name: 'System Settings', path: 'settings', iconType: 'settings' },
 ];
 

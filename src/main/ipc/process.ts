@@ -5,11 +5,11 @@ export function registerProcessHandlers() {
   ipcMain.handle('process:launchApp', async (_, appPath: string) => {
     try {
       const lower = (appPath || '').toLowerCase();
-      if (lower === 'spotify' || lower.includes('spotify')) {
+      if (lower === 'spotify') {
         await shell.openExternal('spotify:');
         return;
       }
-      if (lower === 'photos' || lower.includes('photos')) {
+      if (lower === 'photos') {
         await shell.openExternal('ms-photos:');
         return;
       }
@@ -24,11 +24,11 @@ export function registerProcessHandlers() {
   ipcMain.handle('process:openPath', async (_, targetPath: string) => {
     try {
       const lower = (targetPath || '').toLowerCase();
-      if (lower === 'spotify' || lower.includes('spotify')) {
+      if (lower === 'spotify') {
         await shell.openExternal('spotify:');
         return;
       }
-      if (lower === 'photos' || lower.includes('photos')) {
+      if (lower === 'photos') {
         await shell.openExternal('ms-photos:');
         return;
       }
@@ -56,27 +56,30 @@ export function registerProcessHandlers() {
         return 'success';
       }
       const cmd = rawCmd.toLowerCase();
+      const hasArgs = cmd !== cmd.split(/\s+/)[0];
       let target = '';
-      if (cmd.includes('photos')) target = 'ms-photos:';
-      else if (cmd.includes('chrome')) target = 'chrome';
-      else if (cmd.includes('edge')) target = 'msedge';
-      else if (cmd.includes('downloads')) target = 'shell:downloads';
-      else if (cmd.includes('document')) target = 'shell:Personal';
-      else if (cmd.includes('picture')) target = 'shell:My Pictures';
-      else if (cmd.includes('recycle')) target = 'shell:RecycleBinFolder';
-      else if (cmd.includes('settings')) target = 'ms-settings:';
-      else if (cmd.includes('storage')) target = 'ms-settings:storagesense';
-      else if (cmd.includes('calculator') || cmd === 'calc') target = 'calc';
-      else if (cmd.includes('notepad')) target = 'notepad';
-      else if (cmd.includes('task manager') || cmd === 'taskmgr') target = 'taskmgr';
-      else if (cmd.includes('terminal') || cmd.includes('powershell')) target = 'wt';
-      else if (cmd.includes('cmd')) target = 'cmd';
-      else if (cmd.includes('control panel')) target = 'control';
-      else if (cmd.includes('explorer')) target = 'explorer';
-      else if (cmd.includes('store')) target = 'ms-windows-store:';
-      else if (cmd === 'lock') {
-        exec('rundll32.exe user32.dll,LockWorkStation');
-        return 'success';
+      if (!hasArgs) {
+        if (cmd === 'photos') target = 'ms-photos:';
+        else if (cmd === 'chrome') target = 'chrome';
+        else if (cmd === 'edge') target = 'msedge';
+        else if (cmd === 'downloads') target = 'shell:downloads';
+        else if (cmd === 'document' || cmd === 'documents') target = 'shell:Personal';
+        else if (cmd === 'picture' || cmd === 'pictures') target = 'shell:My Pictures';
+        else if (cmd === 'recycle' || cmd === 'recycle bin') target = 'shell:RecycleBinFolder';
+        else if (cmd === 'settings') target = 'ms-settings:';
+        else if (cmd === 'storage') target = 'ms-settings:storagesense';
+        else if (cmd === 'calculator' || cmd === 'calc') target = 'calc';
+        else if (cmd === 'notepad') target = 'notepad';
+        else if (cmd === 'task manager' || cmd === 'taskmgr') target = 'taskmgr';
+        else if (cmd === 'terminal' || cmd === 'powershell') target = 'wt';
+        else if (cmd === 'cmd') target = 'cmd';
+        else if (cmd === 'control panel') target = 'control';
+        else if (cmd === 'explorer') target = 'explorer';
+        else if (cmd === 'store') target = 'ms-windows-store:';
+        else if (cmd === 'lock') {
+          exec('rundll32.exe user32.dll,LockWorkStation');
+          return 'success';
+        }
       }
 
       if (target) {

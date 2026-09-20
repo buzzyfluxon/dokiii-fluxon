@@ -3,6 +3,15 @@ import { execFile, ChildProcess } from 'child_process';
 const activeProcesses = new Set<ChildProcess>();
 let activeCount = 0;
 const MAX_CONCURRENT = 1;
+const MAX_QUEUE = 4;
+
+interface QueuedRequest {
+  script: string;
+  timeoutMs: number;
+  resolve: (value: string) => void;
+}
+
+const queue: QueuedRequest[] = [];
 
 export function killAllPowerShell(): void {
   for (const proc of activeProcesses) {
@@ -15,12 +24,20 @@ export function killAllPowerShell(): void {
   }
   activeProcesses.clear();
   activeCount = 0;
+  while (queue.length) {
+    const pending = queue.shift();
+    pending?.resolve('');
+  }
 }
 
-export function runPowerShell(script: string, timeoutMs = 4500): Promise<string> {
-  if (activeCount >= MAX_CONCURRENT) {
-    return Promise.resolve('');
-  }
+function processQueue(): void {
+  if (activeCount >= MAX_CONCURRENT) return;
+  const next = queue.shift();
+  if (!next) return;
+  runNow(next.script, next.timeoutMs).then(next.resolve);
+}
+
+function runNow(script: string, timeoutMs: number): Promise<string> {
   activeCount++;
 
   return new Promise((resolve) => {
@@ -40,6 +57,7 @@ export function runPowerShell(script: string, timeoutMs = 4500): Promise<string>
       }
       activeCount = Math.max(0, activeCount - 1);
       resolve(output);
+      processQueue();
     };
 
     const killProc = () => {
@@ -82,4 +100,17 @@ export function runPowerShell(script: string, timeoutMs = 4500): Promise<string>
       finalize('');
     }
   });
+}
+
+export function runPowerShell(script: string, timeoutMs = 4500): Promise<string> {
+  if (activeCount >= MAX_CONCURRENT) {
+    return new Promise((resolve) => {
+      if (queue.length >= MAX_QUEUE) {
+        const dropped = queue.shift();
+        dropped?.resolve('');
+      }
+      queue.push({ script, timeoutMs, resolve });
+    });
+  }
+  return runNow(script, timeoutMs);
 }

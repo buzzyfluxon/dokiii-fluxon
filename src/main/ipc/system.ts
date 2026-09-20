@@ -164,7 +164,7 @@ async function resolveIconForPath(filePath: string): Promise<string | undefined>
 
 let cachedBinCount = 0;
 let lastBinCountTime = 0;
-let batteryCheckCount = 0;
+let batteryEmptyStreak = 0;
 
 export function registerSystemHandlers() {
   ipcMain.handle('system:getStorageInfo', async () => {
@@ -255,12 +255,12 @@ export function registerSystemHandlers() {
 
       paths.forEach((p) => walkSync(p));
 
-      const uniqueApps = Array.from(new Map(apps.map((a) => [a.name, a])).values());
+      const uniqueApps = Array.from(new Map(apps.map((a) => [a.name, a])).values())
+        .filter((a) => !/uninstall|read\s?me/i.test(a.name));
       uniqueApps.sort((a, b) => a.name.localeCompare(b.name));
-      const sliced = uniqueApps.slice(0, 100);
 
       const appsWithIcons = await Promise.all(
-        sliced.map(async (item) => {
+        uniqueApps.map(async (item) => {
           let iconData: string | undefined;
           try {
             iconData = await resolveIconForPath(item.shortcutPath);
@@ -328,18 +328,15 @@ export function registerSystemHandlers() {
 
   ipcMain.handle('system:getBatteryStatus', async () => {
     const now = Date.now();
-    if (!cachedBattery.hasBattery && batteryCheckCount > 1) {
-      return cachedBattery;
-    }
     if (now - lastBatteryTime < 45000) {
       return cachedBattery;
     }
-    batteryCheckCount++;
     lastBatteryTime = now;
     try {
       const script = `Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object EstimatedChargeRemaining, BatteryStatus | ConvertTo-Json`;
       const out = await runPowerShell(script, 3000);
       if (out) {
+        batteryEmptyStreak = 0;
         const parsed = JSON.parse(out);
         const b = Array.isArray(parsed) ? parsed[0] : parsed;
         if (b && typeof b.EstimatedChargeRemaining === 'number') {
@@ -349,12 +346,17 @@ export function registerSystemHandlers() {
             isCharging,
             hasBattery: true,
           };
+        } else {
+          cachedBattery = { ...cachedBattery, hasBattery: false };
         }
       } else {
-        cachedBattery = { percent: 100, isCharging: true, hasBattery: false };
+        batteryEmptyStreak++;
+        if (batteryEmptyStreak >= 3) {
+          cachedBattery = { ...cachedBattery, hasBattery: false };
+        }
       }
     } catch {
-      cachedBattery = { percent: 100, isCharging: true, hasBattery: false };
+      batteryEmptyStreak++;
     }
     return cachedBattery;
   });
@@ -397,11 +399,13 @@ Write-Output "$v;$m"`;
   });
 
   ipcMain.handle('system:toggleAudioMute', async () => {
-    cachedMute = !cachedMute;
+    const nextMute = !cachedMute;
+    cachedMute = nextMute;
     lastAudioTime = Date.now();
     try {
-      const script = `(New-Object -ComObject WScript.Shell).SendKeys([char]173)`;
-      runPowerShell(script, 2000);
+      const script = `${AUDIO_CMD_DEF}
+[DokiiiAudio]::SetMute($${nextMute ? 'true' : 'false'})`;
+      runPowerShell(script, 3000);
     } catch {}
     return cachedMute;
   });

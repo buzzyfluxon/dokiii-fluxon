@@ -9,27 +9,30 @@ export default function FileSearchWidget() {
   const [results, setResults] = useState<FileSearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const requestIdRef = useRef(0);
 
   const isOpen = activePopover === 'file-search' && query.trim().length > 0;
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (query.trim()) {
-        window.electronAPI.searchFiles(query.trim()).then((res) => {
+      const trimmed = query.trim();
+      if (trimmed) {
+        const requestId = ++requestIdRef.current;
+        window.electronAPI.searchFiles(trimmed).then((res) => {
+          if (requestIdRef.current !== requestId) return;
           setResults(res);
           setSelectedIndex(0);
           openPopover('file-search');
         }).catch(() => {});
       } else {
+        requestIdRef.current++;
         setResults([]);
-        if (activePopover === 'file-search') {
-          closePopover();
-        }
+        closePopover();
       }
     }, 200);
 
     return () => clearTimeout(handler);
-  }, [query, openPopover, closePopover, activePopover]);
+  }, [query, openPopover, closePopover]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {

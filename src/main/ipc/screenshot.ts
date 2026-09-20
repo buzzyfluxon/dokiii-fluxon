@@ -1,13 +1,15 @@
-import { ipcMain, desktopCapturer } from 'electron';
+import { ipcMain, desktopCapturer, app, screen } from 'electron';
 import { exec } from 'child_process';
 import { runPowerShell } from '../utils/powershell';
 import * as path from 'path';
 import * as fs from 'fs';
 
+const OWN_WINDOW_TITLES = new Set(['DOKIII', 'DOKIII Setup', 'Uninstall DOKIII']);
+
 export function registerScreenshotHandlers() {
   ipcMain.handle('screenshot:capture', async (_, mode: 'full' | 'region' | 'window') => {
     try {
-      const screenshotsDir = path.join(process.env.USERPROFILE || '', 'Pictures\\Screenshots');
+      const screenshotsDir = path.join(app.getPath('pictures'), 'Screenshots');
       if (!fs.existsSync(screenshotsDir)) {
         fs.mkdirSync(screenshotsDir, { recursive: true });
       }
@@ -27,7 +29,10 @@ export function registerScreenshotHandlers() {
           thumbnailSize: { width: 3840, height: 2160 },
         });
         if (sources.length > 0) {
-          const png = sources[0].thumbnail.toPNG();
+          const activeDisplay = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+          const match = sources.find((s) => s.display_id && String(activeDisplay.id) === s.display_id);
+          const chosen = match || sources[0];
+          const png = chosen.thumbnail.toPNG();
           fs.writeFileSync(filepath, png);
           return filepath;
         }
@@ -38,8 +43,34 @@ export function registerScreenshotHandlers() {
           types: ['window'],
           thumbnailSize: { width: 3840, height: 2160 },
         });
-        if (sources.length > 0) {
-          const png = sources[0].thumbnail.toPNG();
+        const candidates = sources.filter((s) => !OWN_WINDOW_TITLES.has(s.name));
+        if (candidates.length > 0) {
+          let chosen = candidates[0];
+          try {
+            const script = `
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public class DokiiiWin32 {
+  [DllImport("user32.dll")]
+  public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")]
+  public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+}
+"@
+$hwnd = [DokiiiWin32]::GetForegroundWindow()
+$sb = New-Object System.Text.StringBuilder 256
+[DokiiiWin32]::GetWindowText($hwnd, $sb, 256) | Out-Null
+$sb.ToString()
+`;
+            const foregroundTitle = (await runPowerShell(script, 3000)).trim();
+            if (foregroundTitle) {
+              const match = candidates.find((s) => s.name === foregroundTitle);
+              if (match) chosen = match;
+            }
+          } catch {}
+          const png = chosen.thumbnail.toPNG();
           fs.writeFileSync(filepath, png);
           return filepath;
         }

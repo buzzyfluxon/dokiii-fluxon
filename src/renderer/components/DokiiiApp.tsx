@@ -41,10 +41,10 @@ export const DokiiiApp: React.FC = () => {
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [editNameInput, setEditNameInput] = useState('');
   const [isMaximized, setIsMaximized] = useState(false);
-  const [sysMetrics, setSysMetrics] = useState<{ cpu: number; ram: number; ssd: number }>({
-    cpu: 10,
-    ram: 65,
-    ssd: 75,
+  const [sysMetrics, setSysMetrics] = useState<{ cpu: number | null; ram: number | null; ssd: number | null }>({
+    cpu: null,
+    ram: null,
+    ssd: null,
   });
   const [batteryInfo, setBatteryInfo] = useState<{ percent: number; isCharging: boolean }>({
     percent: 100,
@@ -106,15 +106,15 @@ export const DokiiiApp: React.FC = () => {
           <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
             <div>
               <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>CPU </span>
-              <span style={{ fontSize: '16px', fontWeight: 700 }}>{sysMetrics.cpu}%</span>
+              <span style={{ fontSize: '16px', fontWeight: 700 }}>{sysMetrics.cpu === null ? '--' : `${sysMetrics.cpu}%`}</span>
             </div>
             <div>
               <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>RAM </span>
-              <span style={{ fontSize: '16px', fontWeight: 700 }}>{sysMetrics.ram}%</span>
+              <span style={{ fontSize: '16px', fontWeight: 700 }}>{sysMetrics.ram === null ? '--' : `${sysMetrics.ram}%`}</span>
             </div>
             <div>
               <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>SSD </span>
-              <span style={{ fontSize: '16px', fontWeight: 700 }}>{sysMetrics.ssd}%</span>
+              <span style={{ fontSize: '16px', fontWeight: 700 }}>{sysMetrics.ssd === null ? '--' : `${sysMetrics.ssd}%`}</span>
             </div>
           </div>
         </div>
@@ -874,12 +874,12 @@ export const DokiiiApp: React.FC = () => {
         </div>
       </div>
       <span style={{ fontSize: '24px', fontWeight: 700 }}>DOKIII</span>
-      <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Version 1.0.0 (Release)</span>
+      <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Version {__APP_VERSION__}</span>
       <p style={{ maxWidth: '420px', fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginTop: '8px' }}>
         A refined macOS-style Desktop Dock and interactive Desktop Widgets system designed exclusively for Windows.
       </p>
       <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '4px', display: 'block' }}>
-        Developer: buzzyfluxon
+        Developer: fluxonbuzz
       </span>
 
       <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
@@ -887,17 +887,17 @@ export const DokiiiApp: React.FC = () => {
           className="dokiii-btn secondary"
           onClick={() => {
             try {
-              window.electronAPI?.openUrl('https://github.com/buzzyfluxon');
+              window.electronAPI?.openUrl('https://github.com/fluxonbuzz/dokiii');
             } catch (_) {}
           }}
         >
-          GitHub (buzzyfluxon)
+          GitHub
         </button>
         <button
           className="dokiii-btn secondary"
           onClick={() => {
             try {
-              window.electronAPI?.openUrl('https://github.com/buzzyfluxon');
+              window.electronAPI?.openUrl('https://github.com/fluxonbuzz/dokiii/releases/latest');
             } catch (_) {}
           }}
         >

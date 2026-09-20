@@ -49,7 +49,7 @@ export interface CityTime {
 export interface ScreenshotFile {
   name: string;
   path: string;
-  modified: string;
+  modified: number;
   thumbnail?: string;
 }
 
@@ -57,5 +57,5 @@ export interface DownloadFile {
   name: string;
   path: string;
   size: number;
-  modified: string;
+  modified: number;
 }

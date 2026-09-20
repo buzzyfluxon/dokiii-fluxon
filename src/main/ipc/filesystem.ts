@@ -1,7 +1,6 @@
-import { ipcMain } from 'electron';
+import { app, ipcMain, shell } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { shell } from 'electron';
 
 export function registerFilesystemHandlers() {
   ipcMain.handle('filesystem:getRecentItems', async () => {
@@ -39,7 +38,7 @@ export function registerFilesystemHandlers() {
 
   ipcMain.handle('filesystem:getDownloads', async () => {
     try {
-      const downloadsPath = path.join(process.env.USERPROFILE || '', 'Downloads');
+      const downloadsPath = app.getPath('downloads');
       if (!fs.existsSync(downloadsPath)) return [];
       const files = fs.readdirSync(downloadsPath)
         .map(f => {
@@ -67,7 +66,7 @@ export function registerFilesystemHandlers() {
 
   ipcMain.handle('filesystem:getRecentScreenshots', async () => {
     try {
-      const screenshotsPath = path.join(process.env.USERPROFILE || '', 'Pictures\\Screenshots');
+      const screenshotsPath = path.join(app.getPath('pictures'), 'Screenshots');
       if (!fs.existsSync(screenshotsPath)) return [];
       const files = fs.readdirSync(screenshotsPath)
         .map(f => {
@@ -98,38 +97,41 @@ export function registerFilesystemHandlers() {
       const q = query.toLowerCase();
       const results: {name: string, path: string, type: string}[] = [];
       const searchDirs = [
-        path.join(process.env.USERPROFILE || '', 'Downloads'),
-        path.join(process.env.USERPROFILE || '', 'Desktop'),
-        path.join(process.env.USERPROFILE || '', 'Documents'),
+        app.getPath('downloads'),
+        app.getPath('desktop'),
+        app.getPath('documents'),
         path.join(process.env.ProgramData || '', 'Microsoft\\Windows\\Start Menu\\Programs')
       ];
-      
-      const searchSync = (dir: string, depth: number) => {
+
+      const searchAsync = async (dir: string, depth: number): Promise<void> => {
         if (depth > 2) return;
-        if (!fs.existsSync(dir)) return;
+        if (results.length >= 20) return;
+        let files: string[];
         try {
-          const files = fs.readdirSync(dir);
-          for (const file of files) {
-            if (results.length >= 20) return;
-            const filePath = path.join(dir, file);
-            try {
-              const stat = fs.statSync(filePath);
-              if (stat.isDirectory()) {
-                searchSync(filePath, depth + 1);
-              } else if (file.toLowerCase().includes(q)) {
-                results.push({
-                  name: file,
-                  path: filePath,
-                  type: path.extname(file).toLowerCase() === '.lnk' ? 'app' : 'file'
-                });
-              }
-            } catch {}
-          }
-        } catch {}
+          files = await fs.promises.readdir(dir);
+        } catch {
+          return;
+        }
+        for (const file of files) {
+          if (results.length >= 20) return;
+          const filePath = path.join(dir, file);
+          try {
+            const stat = await fs.promises.stat(filePath);
+            if (stat.isDirectory()) {
+              await searchAsync(filePath, depth + 1);
+            } else if (file.toLowerCase().includes(q)) {
+              results.push({
+                name: file,
+                path: filePath,
+                type: path.extname(file).toLowerCase() === '.lnk' ? 'app' : 'file'
+              });
+            }
+          } catch {}
+        }
       };
 
       for (const dir of searchDirs) {
-        searchSync(dir, 0);
+        await searchAsync(dir, 0);
         if (results.length >= 20) break;
       }
       return results;
@@ -139,6 +141,6 @@ export function registerFilesystemHandlers() {
   });
 
   ipcMain.handle('filesystem:getScreenshotsDir', () => {
-    return path.join(process.env.USERPROFILE || '', 'Pictures\\Screenshots');
+    return path.join(app.getPath('pictures'), 'Screenshots');
   });
 }

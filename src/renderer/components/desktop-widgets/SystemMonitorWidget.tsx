@@ -6,11 +6,13 @@ interface SystemMonitorProps {
 }
 
 export const SystemMonitorWidget: React.FC<SystemMonitorProps> = ({ size = 'small' }) => {
-  const [metrics, setMetrics] = useState<{ cpu: number; ram: number; ssd: number }>({
-    cpu: 12,
-    ram: 68,
-    ssd: 78,
+  const [metrics, setMetrics] = useState<{ cpu: number | null; ram: number | null; ssd: number | null }>({
+    cpu: null,
+    ram: null,
+    ssd: null,
   });
+
+  const fmt = (v: number | null) => (v === null ? '--' : `${v}%`);
 
   useEffect(() => {
     let mounted = true;
@@ -43,9 +45,9 @@ export const SystemMonitorWidget: React.FC<SystemMonitorProps> = ({ size = 'smal
     const c2 = 2 * Math.PI * r2;
     const c3 = 2 * Math.PI * r3;
 
-    const o1 = c1 - (metrics.cpu / 100) * c1;
-    const o2 = c2 - (metrics.ram / 100) * c2;
-    const o3 = c3 - (metrics.ssd / 100) * c3;
+    const o1 = c1 - ((metrics.cpu ?? 0) / 100) * c1;
+    const o2 = c2 - ((metrics.ram ?? 0) / 100) * c2;
+    const o3 = c3 - ((metrics.ssd ?? 0) / 100) * c3;
 
     return (
       <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} style={{ transform: 'rotate(-90deg)' }}>
@@ -108,15 +110,15 @@ export const SystemMonitorWidget: React.FC<SystemMonitorProps> = ({ size = 'smal
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
               <span style={{ color: 'rgba(255,255,255,0.65)' }}>CPU</span>
-              <span style={{ fontWeight: 600 }}>{metrics.cpu}%</span>
+              <span style={{ fontWeight: 600 }}>{fmt(metrics.cpu)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
               <span style={{ color: 'rgba(255,255,255,0.65)' }}>RAM</span>
-              <span style={{ fontWeight: 600 }}>{metrics.ram}%</span>
+              <span style={{ fontWeight: 600 }}>{fmt(metrics.ram)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
               <span style={{ color: 'rgba(255,255,255,0.65)' }}>SSD</span>
-              <span style={{ fontWeight: 600 }}>{metrics.ssd}%</span>
+              <span style={{ fontWeight: 600 }}>{fmt(metrics.ssd)}</span>
             </div>
           </div>
         </div>
@@ -139,15 +141,15 @@ export const SystemMonitorWidget: React.FC<SystemMonitorProps> = ({ size = 'smal
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '10px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
             <span style={{ color: 'rgba(255,255,255,0.7)' }}>Processor (CPU)</span>
-            <span style={{ fontWeight: 600 }}>{metrics.cpu}%</span>
+            <span style={{ fontWeight: 600 }}>{fmt(metrics.cpu)}</span>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '10px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
             <span style={{ color: 'rgba(255,255,255,0.7)' }}>Memory (RAM)</span>
-            <span style={{ fontWeight: 600 }}>{metrics.ram}%</span>
+            <span style={{ fontWeight: 600 }}>{fmt(metrics.ram)}</span>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '10px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
             <span style={{ color: 'rgba(255,255,255,0.7)' }}>Disk Storage (SSD)</span>
-            <span style={{ fontWeight: 600 }}>{metrics.ssd}%</span>
+            <span style={{ fontWeight: 600 }}>{fmt(metrics.ssd)}</span>
           </div>
         </div>
       </div>
@@ -162,15 +164,15 @@ export const SystemMonitorWidget: React.FC<SystemMonitorProps> = ({ size = 'smal
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', paddingBottom: '2px' }}>
         <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 500, letterSpacing: '0.2px' }}>
           <span style={{ color: 'rgba(255,255,255,0.65)' }}>CPU</span>
-          <span style={{ color: '#ffffff', fontWeight: 600 }}>{metrics.cpu}%</span>
+          <span style={{ color: '#ffffff', fontWeight: 600 }}>{fmt(metrics.cpu)}</span>
         </div>
         <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 500, letterSpacing: '0.2px' }}>
           <span style={{ color: 'rgba(255,255,255,0.65)' }}>RAM</span>
-          <span style={{ color: '#ffffff', fontWeight: 600 }}>{metrics.ram}%</span>
+          <span style={{ color: '#ffffff', fontWeight: 600 }}>{fmt(metrics.ram)}</span>
         </div>
         <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 500, letterSpacing: '0.2px' }}>
           <span style={{ color: 'rgba(255,255,255,0.65)' }}>SSD</span>
-          <span style={{ color: '#ffffff', fontWeight: 600 }}>{metrics.ssd}%</span>
+          <span style={{ color: '#ffffff', fontWeight: 600 }}>{fmt(metrics.ssd)}</span>
         </div>
       </div>
     </div>

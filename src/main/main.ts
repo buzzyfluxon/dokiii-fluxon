@@ -12,6 +12,7 @@ import { registerStartupHandlers } from './ipc/startup';
 import { registerWallpaperHandlers, cleanupWallpaperWatcher } from './ipc/wallpaper';
 import { killAllPowerShell } from './utils/powershell';
 import { createTray } from './tray';
+import { DOKIII_ICON_DATA_URL } from './utils/icon';
 import { DEFAULT_DOCK_CONFIG, DEFAULT_ENABLED_WIDGETS, DEFAULT_PROFILES, WIDGET_REGISTRY } from '../shared/constants';
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -76,9 +77,24 @@ let tray: any = null;
 let isModalOpen = false;
 let isPopoverOpen = false;
 
-const DOKIII_ICON_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAATpSURBVFhHrVfba1xFGM+rzd43m+ez97P2dvZ7GYvuW1i04TWUGNja0utCkK0RANBagpik5aWJKYkMbE3bTC0kiiWUh+qD0qgQgstgk+iUH3xwZcK/gU/mbO3ObOz21R8+DHnfPPN7/vN983MmdNg1psHzUbLnFHPwsyx1bOzIH71fM1zJG6DyWBeajK1wmxshtnYUoGBvJdA2Rk0KW21n8nQrKBip/sLfWRsg6LE0AyjvkkFk8FSbkug+3YDo94CE8NJcxERBQHGioDSQFYIS7AbsJNiOUhcrgBTUQBL+DSwY3jB6bYioFgC9WB1y5LyAj6LX8HGCFAPokioZ9pHRci+1/DjC1BWZbVq9rlKABWACCiBDVYduPBcLgHdURWE6tNrTWh8TgfNHn0Z2kaDCppGveLHBma5FAF0CXiOZRgsaNyjQ1uLDXKsC6nOHJKJLDrlNBLxNBJyWnkmiEoJtLVYFTEsZ5UAJQNadQnYAQRkpgGfhJfHj2MwP6IEj0dTiEWSkEQZwUAU0UhSeSfins8Pw+MOQKvhi1AJ0GtJCap3AVl4pDXozLCY23Bw9DBSyRwElx9OuwcOuwBbhwvxWArD+0YVm6uIkC+MfG4IzU3t1bwqFAXwSlACSaXfKyHfPwKPEITL4YXTLsDabkdHqw3rH2/g3s7PeOnAEVjNHRBa3Ag4QsjE+uB1BqHTGGuKqJ+BsgA9xJCMbGZQSSuZabulHXEhjKHcXlxZ38Jna7cxdWwah+QXsHD0DHKeDLpC3Qi5okoZanFTAmrvW7Kqw2IS2a5BeFx+OFrt+ODYDO5evosbl77Gwvnr+GRhGydffAfLY+fwZPkx9odHkPTnILni0Gr0XN6aAmghpNU06hAJJJGTB+BotmF2fAa/bT/GxuotXFzcxIWzn2Jt/ktMHHoPw9IoTo1+CNmdQZeUR8id2K2ASglYISQDEU8nMuFe9Hlk/Lp+D3eW72Bl8XN8NL+BC2ev4dLiLbx+cBqnX13Bw+2/kY2OIhbsRYASwBNRPgfYNaASoNEjIshIB7I4mhrGP9s/4fzbs5iemsXJt2YwNXkGX1z5FpPHT6M/PobJI/MQhQxkqR8BYRcZIOcAK4AWQQgkVxTpUA4D/hT+vHEfP1z7DpfXtrC6chOrFzexc/shjo+9iXdfO4Wdrx4hEe5FRMzBJ0Shq5cBciEplYAOqhZggNcWREbsgctix9wb7+OvR0/w4Mff8f3OL3hw/w/cvP4NBKeIE+MTuLq4hXAojVi0B25lGxZ2AV8AswZ40OtMaLNY0R0dQNAlwmP14cThCSwtbWBpZRNT0+cQiWThsHtht/thtfoQ8Mnozu5Ha7NN+S5UCSgecpVvQfEoVmbOWYg6rQGiO4YeeUjZEWS2bocIt1OC0xGEVwjD74si6E8gFunF3vwrCIsZ5QyhebgZqBLAyYKSCa0Rgi2IWCiHqJhFRMogLKYVRKQs4pE+JOP7kEkegN8jF1NvrnAwwWsKoIWwonRao1ISHlkJJFv01mOhElBrG7ICWFvh4sEjp/o5wVkRdTPAgh5YygBLzAtCv6s56EvpU+4DPGK6j7XRY1g7jboloIlYWy3U8y3crtWZ2bWAWn3PAh6H6hzgOdQa+F/A41GtAZ5DrYH/FxQBBl3x71j1N0yhlp3bT/8psyj+cVP+JO6//sM90fiE5H0AAAAASUVORK5CYII=';
+function getPackagedBuildDir(): string | null {
+  if (!app.isPackaged) return null;
+  const dir = path.join(process.resourcesPath, 'build');
+  return fs.existsSync(dir) ? dir : null;
+}
 
 function getAppNativeIcon(): NativeImage {
+  const packagedBuildDir = getPackagedBuildDir();
+  if (packagedBuildDir) {
+    const packagedIco = path.join(packagedBuildDir, 'icon.ico');
+    if (fs.existsSync(packagedIco)) {
+      return nativeImage.createFromPath(packagedIco);
+    }
+    const packagedPng = path.join(packagedBuildDir, 'icon.png');
+    if (fs.existsSync(packagedPng)) {
+      return nativeImage.createFromPath(packagedPng);
+    }
+  }
   const icoPath = path.join(__dirname, '..', '..', 'build', 'icon.ico');
   if (fs.existsSync(icoPath)) {
     return nativeImage.createFromPath(icoPath);
@@ -90,6 +106,14 @@ function getAppNativeIcon(): NativeImage {
   const logoPath = path.join(__dirname, '..', 'renderer', 'assets', 'dokiii-logo.jpg');
   if (fs.existsSync(logoPath)) {
     return nativeImage.createFromPath(logoPath);
+  }
+  const distLogoDir = path.join(__dirname, '..', 'renderer', 'assets');
+  if (fs.existsSync(distLogoDir)) {
+    const files = fs.readdirSync(distLogoDir);
+    const logoFile = files.find((f: string) => f.startsWith('dokiii-logo'));
+    if (logoFile) {
+      return nativeImage.createFromPath(path.join(distLogoDir, logoFile));
+    }
   }
   return nativeImage.createFromDataURL(DOKIII_ICON_DATA_URL);
 }
@@ -170,7 +194,7 @@ function registerWindowsUninstall(exePath: string): void {
     const key = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\DOKIII';
     const installDir = path.dirname(exePath);
     execFile('reg.exe', ['add', key, '/v', 'DisplayName', '/d', 'DOKIII', '/f']);
-    execFile('reg.exe', ['add', key, '/v', 'DisplayVersion', '/d', '1.0.0', '/f']);
+    execFile('reg.exe', ['add', key, '/v', 'DisplayVersion', '/d', app.getVersion(), '/f']);
     execFile('reg.exe', ['add', key, '/v', 'Publisher', '/d', 'DOKIII', '/f']);
     execFile('reg.exe', ['add', key, '/v', 'DisplayIcon', '/d', `${exePath},0`, '/f']);
     execFile('reg.exe', ['add', key, '/v', 'InstallLocation', '/d', installDir, '/f']);
@@ -583,9 +607,7 @@ function registerSetupHandlers() {
   ipcMain.handle('setup:finish', () => {
     store.set('setupComplete', true);
     const finalExe = installAppFiles();
-    createDesktopShortcut(finalExe);
     registerWindowsUninstall(finalExe);
-    configureStartup(true, finalExe);
     if (setupWindow) {
       setupWindow.close();
       setupWindow = null;
@@ -626,7 +648,11 @@ function registerSetupHandlers() {
       'DOKIII'
     );
     if (app.isPackaged && fs.existsSync(targetDir)) {
-      execFile('cmd.exe', ['/c', 'timeout /t 2 /nobreak >nul && rmdir /s /q "' + targetDir + '"']);
+      execFile(
+        'cmd.exe',
+        ['/c', 'timeout /t 2 /nobreak >nul && rmdir /s /q "' + targetDir + '"'],
+        { windowsVerbatimArguments: true }
+      );
     }
     app.quit();
   });
@@ -789,6 +815,12 @@ if (!gotSingleInstanceLock) {
     const isSetupDone = store.get('setupComplete') as boolean;
     logDebug('whenReady: isSetupDone=' + isSetupDone);
     if (isSetupDone) {
+      const targetExe = path.join(targetDir, 'DOKIII.exe');
+      if (app.isPackaged && !isRunningFromInstalledDir && fs.existsSync(targetExe)) {
+        execFile(targetExe);
+        app.quit();
+        return;
+      }
       const finalExe = installAppFiles();
       registerWindowsUninstall(finalExe);
       createWindow();

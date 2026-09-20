@@ -18,15 +18,19 @@ async function embed(exePath) {
     'version-string': {
       FileDescription: 'DOKIII',
       ProductName: 'DOKIII',
-      LegalCopyright: 'DOKIII',
+      LegalCopyright: 'Copyright (c) 2026 fluxonbuzz',
       OriginalFilename: 'DOKIII.exe',
     },
   });
   console.log('ICON_EMBEDDED_SUCCESSFULLY: ' + targetExe);
 }
 
-const exeArg = process.argv[2] || path.resolve(__dirname, '..', 'release', 'win-unpacked', 'DOKIII.exe');
-embed(exeArg).catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+module.exports = { embed };
+
+if (require.main === module) {
+  const exeArg = process.argv[2] || path.resolve(__dirname, '..', 'release', 'win-unpacked', 'DOKIII.exe');
+  embed(exeArg).catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

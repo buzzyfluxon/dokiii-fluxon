@@ -6,9 +6,9 @@ interface BatteryProps {
 }
 
 export const BatteryWidget: React.FC<BatteryProps> = ({ size = 'small' }) => {
-  const [battery, setBattery] = useState<{ percent: number; isCharging: boolean; hasBattery: boolean }>({
-    percent: 100,
-    isCharging: true,
+  const [battery, setBattery] = useState<{ percent: number | null; isCharging: boolean; hasBattery: boolean }>({
+    percent: null,
+    isCharging: false,
     hasBattery: true,
   });
 
@@ -37,7 +37,7 @@ export const BatteryWidget: React.FC<BatteryProps> = ({ size = 'small' }) => {
     const strokeWidth = 3.5;
     const r = center - strokeWidth;
     const circ = 2 * Math.PI * r;
-    const offset = circ - (battery.percent / 100) * circ;
+    const offset = circ - ((battery.percent ?? 0) / 100) * circ;
 
     return (
       <div style={{ position: 'relative', width: ringSize, height: ringSize }}>
@@ -113,7 +113,7 @@ export const BatteryWidget: React.FC<BatteryProps> = ({ size = 'small' }) => {
           {renderBatteryRing(68)}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '36px', fontWeight: 600, letterSpacing: '-0.5px' }}>
-              {battery.percent}%
+              {battery.percent === null ? '--' : `${battery.percent}%`}
             </span>
             <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
               {battery.isCharging ? 'Connected to Power Adapter' : 'Remaining Battery'}
@@ -138,7 +138,7 @@ export const BatteryWidget: React.FC<BatteryProps> = ({ size = 'small' }) => {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
           <span style={{ fontSize: '42px', fontWeight: 700, letterSpacing: '-1px' }}>
-            {battery.percent}%
+            {battery.percent === null ? '--' : `${battery.percent}%`}
           </span>
           <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)' }}>
             {battery.isCharging ? 'Power Supply Connected' : 'Running on Internal Battery'}
@@ -158,7 +158,7 @@ export const BatteryWidget: React.FC<BatteryProps> = ({ size = 'small' }) => {
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', paddingBottom: '2px' }}>
         <span style={{ fontSize: '34px', fontWeight: 600, letterSpacing: '-0.5px', lineHeight: 1 }}>
-          {battery.percent}%
+          {battery.percent === null ? '--' : `${battery.percent}%`}
         </span>
       </div>
     </div>
