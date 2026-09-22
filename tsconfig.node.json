@@ -13,5 +13,5 @@
     "declaration": false,
     "sourceMap": true
   },
-  "include": ["src/main", "src/preload", "src/shared", "src/setup"]
+  "include": ["src/main", "src/preload", "src/shared"]
 }

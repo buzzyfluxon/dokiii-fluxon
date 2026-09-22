@@ -30,14 +30,14 @@
 ## Download
 
 <p align="center">
-  <a href="https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest/download/DOKIII.exe">
-    <img src="https://img.shields.io/badge/Download-DOKIII.exe-b39ddb?style=for-the-badge&logo=windows&logoColor=white" alt="Download DOKIII.exe" />
+  <a href="https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest/download/DOKIII-Setup.exe">
+    <img src="https://img.shields.io/badge/Download-DOKIII--Setup.exe-b39ddb?style=for-the-badge&logo=windows&logoColor=white" alt="Download DOKIII Installer" />
   </a>
   <br/>
-  <sub>Single file &nbsp;•&nbsp; Windows 10/11 x64 &nbsp;•&nbsp; No separate installer needed</sub>
+  <sub>Single installer &nbsp;•&nbsp; Windows 10/11 x64 &nbsp;•&nbsp; Choose your install folder</sub>
 </p>
 
-Download `DOKIII.exe` and run it. A short setup wizard installs DOKIII to your user profile and creates the shortcuts you choose. Nothing else is required.
+Download `DOKIII-Setup.exe` and run it. The installer lets you pick the install folder (any drive) and sets up the shortcuts you choose. Nothing else is required.
 
 Windows SmartScreen may show a warning the first time, because the app is not code-signed. Select **More info**, then **Run anyway**.
 
@@ -56,8 +56,8 @@ You can also browse every version on the [Releases page](https://github.com/buzz
 ## How to Use
 
 ### Getting Started
-1. Download `DOKIII.exe` from [Releases](https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest).
-2. Run it and follow the setup wizard. The dock and widgets appear on your desktop when it finishes.
+1. Download `DOKIII-Setup.exe` from [Releases](https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest).
+2. Run it and follow the installer. The dock and widgets appear on your desktop when it finishes.
 
 ### Dock
 - **Launch apps**: Click any icon on the dock.
@@ -101,7 +101,7 @@ npm run build
 npm run pack
 ```
 
-The executable is written to `release/DOKIII.exe`. Pushing a tag that starts with `v` builds and publishes it automatically through GitHub Actions.
+The installer is written to `release/DOKIII-Setup.exe`. Pushing a tag that starts with `v` builds and publishes it automatically through GitHub Actions.
 
 ---
 

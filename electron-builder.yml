@@ -14,8 +14,14 @@ win:
   icon: build/icon.ico
   signAndEditExecutable: false
   target:
-    - target: portable
+    - target: nsis
       arch: x64
-portable:
-  artifactName: DOKIII.exe
-  requestExecutionLevel: user
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: DOKIII
+  artifactName: DOKIII-Setup.exe
+  uninstallDisplayName: DOKIII

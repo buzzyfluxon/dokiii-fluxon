@@ -78,13 +78,6 @@ export function createTray(mainWindow: BrowserWindow): Tray | null {
       },
     },
     {
-      label: 'Setup Wizard',
-      click: () => {
-        ipcMain.emit('show-setup');
-      },
-    },
-    { type: 'separator' },
-    {
       label: 'Widget Library',
       click: () => {
         mainWindow.show();

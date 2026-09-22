@@ -16,13 +16,7 @@ function getStartupShortcutPath(): string {
 
 export function registerStartupHandlers() {
   ipcMain.handle('startup:setLaunchAtStartup', (_, value: boolean) => {
-    const targetExe = path.join(
-      process.env.LOCALAPPDATA || '',
-      'Programs',
-      'DOKIII',
-      'DOKIII.exe'
-    );
-    const exePath = fs.existsSync(targetExe) ? targetExe : process.execPath;
+    const exePath = process.execPath;
     app.setLoginItemSettings({
       openAtLogin: value,
       path: exePath,

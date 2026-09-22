@@ -41,7 +41,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/DOKIII.exe
+          files: release/DOKIII-Setup.exe
           generate_release_notes: true
           draft: false
           prerelease: false

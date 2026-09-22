@@ -69,13 +69,10 @@ const store = new Store({
     profiles: DEFAULT_PROFILES,
     activeProfileId: 'default',
     windowPosition: null,
-    setupComplete: false,
   },
 });
 
 let mainWindow: BrowserWindow | null = null;
-let setupWindow: BrowserWindow | null = null;
-let uninstallWindow: BrowserWindow | null = null;
 let tray: any = null;
 let isModalOpen = false;
 let isPopoverOpen = false;
@@ -149,340 +146,26 @@ function updateWindowBounds() {
   }
 }
 
-function getAppExePath(): string {
-  if (app.isPackaged) {
-    return process.execPath;
+function findUninstallerExe(): string | null {
+  const installDir = path.dirname(process.execPath);
+  const candidates = [
+    path.join(installDir, 'Uninstall DOKIII.exe'),
+    path.join(installDir, 'Uninstall.exe'),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
   }
-  return path.join(app.getAppPath(), 'node_modules', '.bin', 'electron.cmd');
+  return null;
 }
 
-function installAppFiles(): string {
-  const currentExe = getAppExePath();
-  const currentDir = path.dirname(currentExe);
-  const targetDir = path.join(
-    process.env.LOCALAPPDATA || path.join(app.getPath('home'), 'AppData', 'Local'),
-    'Programs',
-    'DOKIII'
-  );
-  const targetExe = path.join(targetDir, 'DOKIII.exe');
-  const markerPath = path.join(targetDir, '.install-complete');
-
-  if (app.isPackaged && currentDir.toLowerCase() !== targetDir.toLowerCase()) {
-    try {
-      if (!fs.existsSync(targetDir)) {
-        fs.mkdirSync(targetDir, { recursive: true });
-      }
-      const files = fs.readdirSync(currentDir);
-      let hadFailure = false;
-      for (const file of files) {
-        const srcFile = path.join(currentDir, file);
-        const dstFile = path.join(targetDir, file);
-        try {
-          const stat = fs.statSync(srcFile);
-          if (stat.isDirectory()) {
-            fs.cpSync(srcFile, dstFile, { recursive: true, force: true });
-          } else {
-            fs.copyFileSync(srcFile, dstFile);
-          }
-        } catch {
-          hadFailure = true;
-        }
-      }
-      if (hadFailure) {
-        try {
-          fs.rmSync(markerPath, { force: true });
-        } catch {}
-      } else {
-        try {
-          fs.writeFileSync(markerPath, app.getVersion());
-        } catch {}
-      }
-      return targetExe;
-    } catch {
-      return currentExe;
-    }
+function launchUninstaller(): void {
+  const uninstallerExe = findUninstallerExe();
+  if (uninstallerExe) {
+    execFile(uninstallerExe);
+    app.quit();
+  } else {
+    shell.openExternal('ms-settings:appsfeatures');
   }
-  return currentExe;
-}
-
-function isInstallComplete(targetDir: string): boolean {
-  const targetExe = path.join(targetDir, 'DOKIII.exe');
-  const markerPath = path.join(targetDir, '.install-complete');
-  return fs.existsSync(targetExe) && fs.existsSync(markerPath);
-}
-
-function registerWindowsUninstall(exePath: string): void {
-  try {
-    const key = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\DOKIII';
-    const installDir = path.dirname(exePath);
-    execFile('reg.exe', ['add', key, '/v', 'DisplayName', '/d', 'DOKIII', '/f']);
-    execFile('reg.exe', ['add', key, '/v', 'DisplayVersion', '/d', app.getVersion(), '/f']);
-    execFile('reg.exe', ['add', key, '/v', 'Publisher', '/d', 'DOKIII', '/f']);
-    execFile('reg.exe', ['add', key, '/v', 'DisplayIcon', '/d', `${exePath},0`, '/f']);
-    execFile('reg.exe', ['add', key, '/v', 'InstallLocation', '/d', installDir, '/f']);
-    execFile('reg.exe', ['add', key, '/v', 'UninstallString', '/d', `"${exePath}" --uninstall`, '/f']);
-    execFile('reg.exe', ['add', key, '/v', 'NoModify', '/t', 'REG_DWORD', '/d', '1', '/f']);
-    execFile('reg.exe', ['add', key, '/v', 'NoRepair', '/t', 'REG_DWORD', '/d', '1', '/f']);
-  } catch {}
-}
-
-function unregisterWindowsUninstall(): void {
-  try {
-    const key = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\DOKIII';
-    execFile('reg.exe', ['delete', key, '/f']);
-  } catch {}
-}
-
-function createDesktopShortcut(customExePath?: string): boolean {
-  try {
-    const exePath = customExePath || getAppExePath();
-    if (process.platform !== 'win32') return false;
-
-    const desktopLocations = new Set<string>();
-    try {
-      desktopLocations.add(app.getPath('desktop'));
-    } catch {}
-    const homeDesktop = path.join(app.getPath('home'), 'Desktop');
-    if (fs.existsSync(homeDesktop)) {
-      desktopLocations.add(homeDesktop);
-    }
-
-    let success = false;
-    for (const dPath of desktopLocations) {
-      if (fs.existsSync(dPath)) {
-        const shortcutPath = path.join(dPath, 'DOKIII.lnk');
-        const mode = fs.existsSync(shortcutPath) ? 'replace' : 'create';
-        const ok = shell.writeShortcutLink(shortcutPath, mode, {
-          target: exePath,
-          cwd: path.dirname(exePath),
-          description: 'DOKIII Desktop Dock',
-          icon: exePath,
-          iconIndex: 0,
-        });
-        if (ok) success = true;
-      }
-    }
-
-    const startMenuDir = path.join(process.env.APPDATA || '', 'Microsoft', 'Windows', 'Start Menu', 'Programs');
-    if (fs.existsSync(startMenuDir)) {
-      const startMenuLnk = path.join(startMenuDir, 'DOKIII.lnk');
-      const startMode = fs.existsSync(startMenuLnk) ? 'replace' : 'create';
-      shell.writeShortcutLink(startMenuLnk, startMode, {
-        target: exePath,
-        cwd: path.dirname(exePath),
-        description: 'DOKIII Desktop Dock',
-        icon: exePath,
-        iconIndex: 0,
-      });
-    }
-
-    return success;
-  } catch {
-    return false;
-  }
-}
-
-function removeDesktopShortcut(): boolean {
-  try {
-    const desktopLocations = new Set<string>();
-    try {
-      desktopLocations.add(app.getPath('desktop'));
-    } catch {}
-    const homeDesktop = path.join(app.getPath('home'), 'Desktop');
-    if (fs.existsSync(homeDesktop)) {
-      desktopLocations.add(homeDesktop);
-    }
-    for (const dPath of desktopLocations) {
-      const shortcutPath = path.join(dPath, 'DOKIII.lnk');
-      if (fs.existsSync(shortcutPath)) {
-        try {
-          fs.unlinkSync(shortcutPath);
-        } catch {}
-      }
-    }
-    const startMenu = path.join(process.env.APPDATA || '', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'DOKIII.lnk');
-    if (fs.existsSync(startMenu)) {
-      try {
-        fs.unlinkSync(startMenu);
-      } catch {}
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function getStartupShortcutPath(): string {
-  return path.join(
-    process.env.APPDATA || '',
-    'Microsoft',
-    'Windows',
-    'Start Menu',
-    'Programs',
-    'Startup',
-    'DOKIII.lnk'
-  );
-}
-
-function configureStartup(enable: boolean, customExePath?: string): void {
-  try {
-    const exePath = customExePath || getAppExePath();
-    app.setLoginItemSettings({
-      openAtLogin: enable,
-      path: exePath,
-      args: ['--startup'],
-    });
-
-    const startupLnk = getStartupShortcutPath();
-    if (enable) {
-      const mode = fs.existsSync(startupLnk) ? 'replace' : 'create';
-      shell.writeShortcutLink(startupLnk, mode, {
-        target: exePath,
-        cwd: path.dirname(exePath),
-        args: '--startup',
-        description: 'DOKIII Desktop Dock',
-        icon: exePath,
-        iconIndex: 0,
-      });
-    } else {
-      if (fs.existsSync(startupLnk)) {
-        try {
-          fs.unlinkSync(startupLnk);
-        } catch {}
-      }
-    }
-  } catch {}
-}
-
-function removeAppData(): boolean {
-  try {
-    const userDataPath = app.getPath('userData');
-    if (fs.existsSync(userDataPath)) {
-      fs.rmSync(userDataPath, { recursive: true, force: true });
-      return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-function getLogoDataUrl(): string {
-  const logoPath = path.join(__dirname, '..', 'renderer', 'assets', 'dokiii-logo.jpg');
-  if (fs.existsSync(logoPath)) {
-    const data = fs.readFileSync(logoPath);
-    return 'data:image/jpeg;base64,' + data.toString('base64');
-  }
-
-  const distLogoDir = path.join(__dirname, '..', 'renderer', 'assets');
-  if (fs.existsSync(distLogoDir)) {
-    const files = fs.readdirSync(distLogoDir);
-    const logoFile = files.find((f: string) => f.startsWith('dokiii-logo'));
-    if (logoFile) {
-      const data = fs.readFileSync(path.join(distLogoDir, logoFile));
-      const ext = path.extname(logoFile).slice(1);
-      return `data:image/${ext};base64,` + data.toString('base64');
-    }
-  }
-
-  return DOKIII_ICON_DATA_URL;
-}
-
-function createSetupWindow() {
-  if (setupWindow) {
-    setupWindow.setAlwaysOnTop(true);
-    setupWindow.show();
-    setupWindow.focus();
-    setupWindow.moveTop();
-    return;
-  }
-
-  const display = screen.getPrimaryDisplay();
-  const { width, height } = display.workArea;
-  const winWidth = 540;
-  const winHeight = 480;
-
-  setupWindow = new BrowserWindow({
-    title: 'DOKIII Setup',
-    icon: getAppNativeIcon(),
-    x: Math.floor((width - winWidth) / 2) + display.workArea.x,
-    y: Math.floor((height - winHeight) / 2) + display.workArea.y,
-    width: winWidth,
-    height: winHeight,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    resizable: false,
-    maximizable: false,
-    minimizable: false,
-    hasShadow: true,
-    skipTaskbar: false,
-    webPreferences: {
-      preload: path.join(__dirname, '..', 'preload', 'setup-preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-  });
-
-  setupWindow.loadFile(path.join(__dirname, '..', 'setup', 'setup.html'));
-  setupWindow.setAlwaysOnTop(true);
-  setupWindow.show();
-  setupWindow.focus();
-  setupWindow.moveTop();
-
-  setupWindow.on('closed', () => {
-    setupWindow = null;
-    if (!store.get('setupComplete') && !mainWindow) {
-      app.quit();
-    }
-  });
-}
-
-function createUninstallWindow() {
-  if (uninstallWindow) {
-    uninstallWindow.setAlwaysOnTop(true);
-    uninstallWindow.show();
-    uninstallWindow.focus();
-    uninstallWindow.moveTop();
-    return;
-  }
-
-  const display = screen.getPrimaryDisplay();
-  const { width, height } = display.workArea;
-  const winWidth = 540;
-  const winHeight = 480;
-
-  uninstallWindow = new BrowserWindow({
-    title: 'Uninstall DOKIII',
-    icon: getAppNativeIcon(),
-    x: Math.floor((width - winWidth) / 2) + display.workArea.x,
-    y: Math.floor((height - winHeight) / 2) + display.workArea.y,
-    width: winWidth,
-    height: winHeight,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    resizable: false,
-    maximizable: false,
-    minimizable: false,
-    hasShadow: true,
-    skipTaskbar: false,
-    webPreferences: {
-      preload: path.join(__dirname, '..', 'preload', 'setup-preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-  });
-
-  uninstallWindow.loadFile(path.join(__dirname, '..', 'setup', 'uninstall.html'));
-  uninstallWindow.setAlwaysOnTop(true);
-  uninstallWindow.show();
-  uninstallWindow.focus();
-  uninstallWindow.moveTop();
-
-  uninstallWindow.on('closed', () => {
-    uninstallWindow = null;
-  });
 }
 
 function createWindow() {
@@ -539,23 +222,6 @@ function createWindow() {
     logDebug(`renderer [${level}]: ${message}`);
   });
 
-  const startupLnk = getStartupShortcutPath();
-  if (fs.existsSync(startupLnk)) {
-    try {
-      const link = shell.readShortcutLink(startupLnk);
-      if (!link.args || !link.args.includes('--startup')) {
-        shell.writeShortcutLink(startupLnk, 'replace', {
-          target: link.target,
-          cwd: link.cwd,
-          args: '--startup',
-          description: link.description || 'DOKIII Desktop Dock',
-          icon: link.icon || link.target,
-          iconIndex: link.iconIndex || 0,
-        });
-      }
-    } catch {}
-  }
-
   mainWindow.webContents.on('did-finish-load', () => {
     logDebug('did-finish-load fired');
     if (mainWindow) {
@@ -571,11 +237,7 @@ function createWindow() {
   });
 
   ipcMain.on('show-uninstall', () => {
-    createUninstallWindow();
-  });
-
-  ipcMain.on('show-setup', () => {
-    createSetupWindow();
+    launchUninstaller();
   });
 
   screen.on('display-metrics-changed', () => {
@@ -597,71 +259,8 @@ function createWindow() {
 }
 
 function registerSetupHandlers() {
-  ipcMain.handle('setup:createDesktopShortcut', () => {
-    const finalExe = installAppFiles();
-    return createDesktopShortcut(finalExe);
-  });
-
-  ipcMain.handle('setup:setLaunchAtStartup', (_, value: boolean) => {
-    const exePath = installAppFiles();
-    configureStartup(value, exePath);
-  });
-
-  ipcMain.handle('setup:finish', () => {
-    store.set('setupComplete', true);
-    const finalExe = installAppFiles();
-    registerWindowsUninstall(finalExe);
-    if (setupWindow) {
-      setupWindow.close();
-      setupWindow = null;
-    }
-    createWindow();
-  });
-
-  ipcMain.handle('setup:getAppIcon', () => {
-    return getLogoDataUrl();
-  });
-
-  ipcMain.handle(
-    'setup:uninstall',
-    (_, options: { removeShortcut: boolean; removeStartup: boolean; removeAppData: boolean }) => {
-      if (options.removeShortcut) {
-        removeDesktopShortcut();
-      }
-      if (options.removeStartup) {
-        configureStartup(false);
-      }
-      unregisterWindowsUninstall();
-      if (options.removeAppData) {
-        store.set('setupComplete', false);
-        removeAppData();
-      }
-      return true;
-    }
-  );
-
-  ipcMain.handle('setup:finishUninstall', () => {
-    if (uninstallWindow) {
-      uninstallWindow.close();
-      uninstallWindow = null;
-    }
-    const targetDir = path.join(
-      process.env.LOCALAPPDATA || path.join(app.getPath('home'), 'AppData', 'Local'),
-      'Programs',
-      'DOKIII'
-    );
-    if (app.isPackaged && fs.existsSync(targetDir)) {
-      execFile(
-        'cmd.exe',
-        ['/c', 'timeout /t 2 /nobreak >nul && rmdir /s /q "' + targetDir + '"'],
-        { windowsVerbatimArguments: true }
-      );
-    }
-    app.quit();
-  });
-
   ipcMain.handle('setup:showUninstall', () => {
-    createUninstallWindow();
+    launchUninstaller();
   });
 }
 
@@ -788,48 +387,7 @@ if (!gotSingleInstanceLock) {
     registerSetupHandlers();
     registerWallpaperHandlers(() => mainWindow);
 
-    ipcMain.on('show-uninstall', () => {
-      createUninstallWindow();
-    });
-
-    ipcMain.on('show-setup', () => {
-      createSetupWindow();
-    });
-
-    if (process.argv.includes('--uninstall')) {
-      createUninstallWindow();
-      return;
-    }
-
-    if (process.argv.includes('--setup')) {
-      createSetupWindow();
-      return;
-    }
-
-    const targetDir = path.join(
-      process.env.LOCALAPPDATA || path.join(app.getPath('home'), 'AppData', 'Local'),
-      'Programs',
-      'DOKIII'
-    );
-    const currentExe = getAppExePath();
-    const currentDir = path.dirname(currentExe);
-    const targetExe = path.join(targetDir, 'DOKIII.exe');
-    const isRunningFromInstalledDir = currentDir.toLowerCase() === targetDir.toLowerCase();
-
-    const isSetupDone = store.get('setupComplete') as boolean;
-    logDebug('whenReady: isSetupDone=' + isSetupDone);
-    if (isSetupDone) {
-      if (app.isPackaged && !isRunningFromInstalledDir && isInstallComplete(targetDir)) {
-        execFile(targetExe);
-        app.quit();
-        return;
-      }
-      const finalExe = installAppFiles();
-      registerWindowsUninstall(finalExe);
-      createWindow();
-    } else {
-      createSetupWindow();
-    }
+    createWindow();
   });
 
   app.on('window-all-closed', () => {
