@@ -307,6 +307,25 @@ export function registerSystemHandlers() {
     }
   });
 
+  ipcMain.handle('system:selectImageFile', async () => {
+    try {
+      const result = await dialog.showOpenDialog({
+        title: 'Select Image',
+        properties: ['openFile'],
+        filters: [
+          { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] },
+        ],
+      });
+      if (!result.canceled && result.filePaths.length > 0) {
+        const filePath = result.filePaths[0];
+        return `file:///${filePath.replace(/\\/g, '/')}`;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
   ipcMain.handle('system:getAppIcon', async (_, filePath: string) => {
     try {
       if (!filePath) return null;

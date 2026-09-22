@@ -10,6 +10,11 @@ import { BatteryWidget } from './BatteryWidget';
 import { AnalogClockWidget } from './AnalogClockWidget';
 import { CalendarMonthWidget } from './CalendarMonthWidget';
 import { MoonPhaseWidget } from './MoonPhaseWidget';
+import { CustomTextWidget } from './CustomTextWidget';
+import { QuoteCardWidget } from './QuoteCardWidget';
+import { CountdownWidget } from './CountdownWidget';
+import { GoalsWidget } from './GoalsWidget';
+import { CarCardWidget } from './CarCardWidget';
 import './desktop-widgets.css';
 
 export const DesktopWidgetsLayer: React.FC = () => {
@@ -207,6 +212,46 @@ export const DesktopWidgetsLayer: React.FC = () => {
         return <CalendarMonthWidget size={item.size} />;
       case 'moon-phase':
         return <MoonPhaseWidget size={item.size} />;
+      case 'custom-text':
+        return (
+          <CustomTextWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'quote-card':
+        return (
+          <QuoteCardWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'countdown':
+        return (
+          <CountdownWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'goals':
+        return (
+          <GoalsWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'car-card':
+        return (
+          <CarCardWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
       default:
         return null;
     }

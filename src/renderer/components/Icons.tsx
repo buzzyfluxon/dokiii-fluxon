@@ -273,6 +273,15 @@ export const WidgetIcon: React.FC<{ id: string; size?: number; color?: string; c
       return <IconNote size={size} color={color} className={className} />;
     case 'currency':
       return <IconCurrency size={size} color={color} className={className} />;
+    case 'custom-text':
+    case 'quote-card':
+      return <IconNote size={size} color={color} className={className} />;
+    case 'countdown':
+      return <IconProgressRing size={size} color={color} className={className} />;
+    case 'goals':
+      return <IconProgressRing size={size} color={color} className={className} />;
+    case 'car-card':
+      return <IconNote size={size} color={color} className={className} />;
     default:
       return <IconApps size={size} color={color} className={className} />;
   }

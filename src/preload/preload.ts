@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   toggleAudioMute: () => ipcRenderer.invoke('system:toggleAudioMute'),
   selectAppFile: () => ipcRenderer.invoke('system:selectAppFile'),
   getAppIcon: (filePath: string) => ipcRenderer.invoke('system:getAppIcon', filePath),
+  selectImageFile: () => ipcRenderer.invoke('system:selectImageFile'),
   getRecentItems: () => ipcRenderer.invoke('filesystem:getRecentItems'),
   getDownloads: () => ipcRenderer.invoke('filesystem:getDownloads'),
   getRecentScreenshots: () => ipcRenderer.invoke('filesystem:getRecentScreenshots'),

@@ -23,6 +23,11 @@ export const WIDGET_IDS = {
   ANALOG_CLOCK: 'analog-clock',
   CALENDAR: 'calendar',
   MOON_PHASE: 'moon-phase',
+  CUSTOM_TEXT: 'custom-text',
+  QUOTE_CARD: 'quote-card',
+  COUNTDOWN: 'countdown',
+  GOALS: 'goals',
+  CAR_CARD: 'car-card',
 } as const;
 
 export type WidgetId = (typeof WIDGET_IDS)[keyof typeof WIDGET_IDS];
@@ -35,7 +40,12 @@ export type DesktopWidgetType =
   | 'battery'
   | 'analog-clock'
   | 'calendar'
-  | 'moon-phase';
+  | 'moon-phase'
+  | 'custom-text'
+  | 'quote-card'
+  | 'countdown'
+  | 'goals'
+  | 'car-card';
 
 export type DesktopWidgetSize = 'small' | 'medium' | 'large';
 
@@ -49,6 +59,7 @@ export interface DesktopWidgetItem {
   city?: string;
   pinned?: boolean;
   locked?: boolean;
+  data?: Record<string, any>;
 }
 
 export interface WidgetDefinition {
@@ -68,7 +79,8 @@ export type WidgetCategory =
   | 'media'
   | 'time'
   | 'finance'
-  | 'utilities';
+  | 'utilities'
+  | 'personal';
 
 export const WIDGET_CATEGORIES: { id: WidgetCategory; label: string }[] = [
   { id: 'apps-files', label: 'Apps & Files' },
@@ -78,6 +90,7 @@ export const WIDGET_CATEGORIES: { id: WidgetCategory; label: string }[] = [
   { id: 'time', label: 'Time' },
   { id: 'finance', label: 'Finance' },
   { id: 'utilities', label: 'Utilities' },
+  { id: 'personal', label: 'Personal' },
 ];
 
 export const WIDGET_REGISTRY: WidgetDefinition[] = [
@@ -105,6 +118,11 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
   { id: WIDGET_IDS.ANALOG_CLOCK, name: 'Analog Clock', category: 'time', icon: 'clock', defaultWidth: 'compact', description: 'Classic macOS analog clock dial', supportsDesktop: true },
   { id: WIDGET_IDS.CALENDAR, name: 'Calendar Month', category: 'time', icon: 'calendar', defaultWidth: 'compact', description: 'Full month calendar grid', supportsDesktop: true },
   { id: WIDGET_IDS.MOON_PHASE, name: 'Moon Phase', category: 'time', icon: 'globe', defaultWidth: 'compact', description: 'Live astronomical moon phase', supportsDesktop: true },
+  { id: WIDGET_IDS.CUSTOM_TEXT, name: 'Custom Text', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'Your own text, reminder or short phrase', supportsDesktop: true },
+  { id: WIDGET_IDS.QUOTE_CARD, name: 'Quote Card', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A quote and author you choose', supportsDesktop: true },
+  { id: WIDGET_IDS.COUNTDOWN, name: 'Countdown', category: 'personal', icon: 'progress', defaultWidth: 'compact', description: 'Count down to a date you set', supportsDesktop: true },
+  { id: WIDGET_IDS.GOALS, name: 'Goals', category: 'personal', icon: 'progress', defaultWidth: 'compact', description: 'Track up to 5 personal goals', supportsDesktop: true },
+  { id: WIDGET_IDS.CAR_CARD, name: 'Car Card', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A visual card for your favorite car', supportsDesktop: true },
 ];
 
 export const DEFAULT_ENABLED_WIDGETS: WidgetId[] = [

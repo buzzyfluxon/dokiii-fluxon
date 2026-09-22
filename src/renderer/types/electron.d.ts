@@ -14,6 +14,7 @@ export interface ElectronAPI {
   toggleAudioMute(): Promise<boolean>;
   selectAppFile(): Promise<{ name: string; path: string; icon?: string } | null>;
   getAppIcon(filePath: string): Promise<string | null>;
+  selectImageFile(): Promise<string | null>;
   getRecentItems(): Promise<RecentItem[]>;
   getDownloads(): Promise<DownloadFile[]>;
   getRecentScreenshots(): Promise<ScreenshotFile[]>;
