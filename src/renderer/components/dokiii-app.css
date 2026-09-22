@@ -46,11 +46,14 @@
 }
 
 .dokiii-window.is-maximized {
-  width: calc(100vw - 64px);
-  height: calc(100vh - 64px);
+  /* True fullscreen: fills the entire window with no gaps, no rounded
+     corners and no border, so nothing behind it is visible at all. */
+  width: 100vw;
+  height: 100vh;
   max-width: none;
   max-height: none;
-  border-radius: 14px;
+  border-radius: 0;
+  border: none;
 }
 
 .dokiii-sidebar {

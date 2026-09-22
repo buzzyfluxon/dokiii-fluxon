@@ -363,8 +363,21 @@ if (!gotSingleInstanceLock) {
   logDebug('quitting because gotSingleInstanceLock is false');
   app.quit();
 } else {
+  const launchedAtStartup = process.argv.includes('--startup');
+  const appLaunchTime = Date.now();
+  // Guards against any leftover/duplicate autostart entry (e.g. from an
+  // older install) still launching a second process right at boot: a
+  // second-instance signal arriving within this window of a --startup
+  // launch is treated as a stray duplicate launch, not a real user request
+  // to open the app, so it won't pop the Home screen open on reboot.
+  const STARTUP_GRACE_MS = 8000;
+
   app.on('second-instance', () => {
     logDebug('second-instance fired');
+    if (launchedAtStartup && Date.now() - appLaunchTime < STARTUP_GRACE_MS) {
+      logDebug('second-instance ignored: within startup grace period');
+      return;
+    }
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.setSkipTaskbar(false);

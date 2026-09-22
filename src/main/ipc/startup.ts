@@ -1,4 +1,4 @@
-import { ipcMain, app, shell } from 'electron';
+import { ipcMain, app } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -17,34 +17,29 @@ function getStartupShortcutPath(): string {
 export function registerStartupHandlers() {
   ipcMain.handle('startup:setLaunchAtStartup', (_, value: boolean) => {
     const exePath = process.execPath;
+    // Only ever use a single autostart mechanism. Previously we registered
+    // BOTH app.setLoginItemSettings AND a manual Startup-folder shortcut,
+    // which caused Windows to launch two instances of DOKIII on login.
+    // The second instance would hit the single-instance lock and emit
+    // 'second-instance' in the first, which auto-opened the Home screen
+    // right after boot. Registering only the login item fixes that.
     app.setLoginItemSettings({
       openAtLogin: value,
       path: exePath,
       args: ['--startup'],
     });
+
+    // Clean up any legacy manual shortcut left over from older installs so
+    // it can't cause a duplicate launch on the next reboot.
     const lnk = getStartupShortcutPath();
-    if (value) {
-      const mode = fs.existsSync(lnk) ? 'replace' : 'create';
-      shell.writeShortcutLink(lnk, mode, {
-        target: exePath,
-        cwd: path.dirname(exePath),
-        args: '--startup',
-        description: 'DOKIII Desktop Dock',
-        icon: exePath,
-        iconIndex: 0,
-      });
-    } else {
-      if (fs.existsSync(lnk)) {
-        try {
-          fs.unlinkSync(lnk);
-        } catch {}
-      }
+    if (fs.existsSync(lnk)) {
+      try {
+        fs.unlinkSync(lnk);
+      } catch {}
     }
   });
 
   ipcMain.handle('startup:getLaunchAtStartup', () => {
-    const lnk = getStartupShortcutPath();
-    if (fs.existsSync(lnk)) return true;
     return app.getLoginItemSettings({ path: process.execPath }).openAtLogin;
   });
 }

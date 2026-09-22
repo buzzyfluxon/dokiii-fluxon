@@ -119,9 +119,12 @@ const App: React.FC = () => {
         style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}
         onClick={handleContainerClick}
       >
-        <Halo />
-        <DesktopWidgetsLayer />
-        <Dock />
+        {/* While the DOKIII app (Home/Settings-style full app) is open, it
+            should be the only thing on screen — the desktop dock, desktop
+            widgets, and Halo must not render underneath it. */}
+        {!isDokiiiAppOpen && <Halo />}
+        {!isDokiiiAppOpen && <DesktopWidgetsLayer />}
+        {!isDokiiiAppOpen && <Dock />}
         {isWidgetLibraryOpen && <WidgetLibrary />}
         {isSettingsOpen && <Settings />}
         {isDokiiiAppOpen && <DokiiiApp />}

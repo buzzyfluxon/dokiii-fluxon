@@ -41,7 +41,10 @@ export const DokiiiApp: React.FC = () => {
   const [newProfileName, setNewProfileName] = useState('');
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [editNameInput, setEditNameInput] = useState('');
-  const [isMaximized, setIsMaximized] = useState(false);
+  // Opens as a true full, maximized window by default (rather than the
+  // small floating panel) since the desktop dock/widgets/Halo are now
+  // hidden while this is open — there's no reason to show a partial view.
+  const [isMaximized, setIsMaximized] = useState(true);
   const [sysMetrics, setSysMetrics] = useState<{ cpu: number | null; ram: number | null; ssd: number | null }>({
     cpu: null,
     ram: null,
