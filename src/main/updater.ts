@@ -1,6 +1,8 @@
 import { app, ipcMain, BrowserWindow } from 'electron';
 import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export type UpdaterStatus =
   | { status: 'idle' }
@@ -13,6 +15,15 @@ export type UpdaterStatus =
 
 const CHECK_DELAY_MS = 10000;
 const CHECK_INTERVAL_MS = 12 * 60 * 60 * 1000;
+const logPath = path.join(process.env.APPDATA || '', 'dokiii', 'debug.log');
+
+function logUpdater(msg: string) {
+  try {
+    const dir = path.dirname(logPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(logPath, `[${new Date().toISOString()}] [updater] ${msg}\n`);
+  } catch {}
+}
 
 let updaterStore: Store<{ dismissedVersion: string }> | null = null;
 let getWindow: (() => BrowserWindow | null) | null = null;
@@ -38,10 +49,12 @@ function getDismissedVersion(): string {
 
 function attachAutoUpdaterListeners() {
   autoUpdater.on('checking-for-update', () => {
+    logUpdater('checking-for-update');
     broadcast({ status: 'checking', isManual: pendingManual });
   });
 
   autoUpdater.on('update-available', (info) => {
+    logUpdater(`update-available version=${info.version}`);
     isBusy = false;
     pendingVersion = info.version;
     if (!pendingManual && getDismissedVersion() === info.version) {
@@ -51,12 +64,14 @@ function attachAutoUpdaterListeners() {
     broadcast({ status: 'available', version: info.version, isManual: pendingManual });
   });
 
-  autoUpdater.on('update-not-available', () => {
+  autoUpdater.on('update-not-available', (info) => {
+    logUpdater(`update-not-available currentVersion=${info?.version || 'unknown'}`);
     isBusy = false;
     broadcast({ status: 'not-available', isManual: pendingManual });
   });
 
   autoUpdater.on('error', (err) => {
+    logUpdater(`error: ${err?.message || err}${err?.stack ? '\n' + err.stack : ''}`);
     isBusy = false;
     const phase = isDownloading ? 'download' : 'check';
     isDownloading = false;
@@ -77,6 +92,7 @@ function attachAutoUpdaterListeners() {
   });
 
   autoUpdater.on('update-downloaded', (info) => {
+    logUpdater(`update-downloaded version=${info.version}`);
     isBusy = false;
     isDownloading = false;
     broadcast({ status: 'downloaded', version: info.version });
@@ -91,7 +107,9 @@ function runCheck(manual: boolean) {
   if (isBusy || isDownloading) return;
   isBusy = true;
   pendingManual = manual;
+  logUpdater(`runCheck manual=${manual} currentVersion=${app.getVersion()}`);
   autoUpdater.checkForUpdates().catch((err) => {
+    logUpdater(`checkForUpdates rejected: ${err?.message || err}${err?.stack ? '\n' + err.stack : ''}`);
     isBusy = false;
     broadcast({
       status: 'error',
@@ -105,6 +123,7 @@ function runCheck(manual: boolean) {
 export function initAutoUpdater(windowGetter: () => BrowserWindow | null) {
   getWindow = windowGetter;
   const packaged = app.isPackaged;
+  logUpdater(`initAutoUpdater packaged=${packaged} version=${app.getVersion()}`);
 
   if (packaged) {
     updaterStore = new Store<{ dismissedVersion: string }>({

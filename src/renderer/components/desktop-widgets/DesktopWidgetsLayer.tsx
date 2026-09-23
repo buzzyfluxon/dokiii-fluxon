@@ -52,7 +52,6 @@ export const DesktopWidgetsLayer: React.FC = () => {
     setDesktopWidgetSize,
     updateDesktopWidgetData,
     removeDesktopWidget,
-    resetDesktopWidgetPositions,
   } = useConfigStore();
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -287,24 +286,26 @@ export const DesktopWidgetsLayer: React.FC = () => {
     closeContextMenu();
   };
 
-  const handleResetPositions = () => {
-    resetDesktopWidgetPositions();
-    const initialPos: Record<string, { x: number; y: number }> = {};
-    const winW = window.innerWidth || 1920;
-    const winH = window.innerHeight || 1080;
-
-    DEFAULT_DESKTOP_WIDGETS.forEach((w) => {
-      let x = w.x;
-      let y = w.y;
-      if (x < 0) {
-        x = winW + x;
-      }
-      if (y < 0) {
-        y = winH + y;
-      }
-      initialPos[w.id] = { x, y };
-    });
-    setPositions(initialPos);
+  const handleResetWidget = (id: string) => {
+    const defaultWidget = DEFAULT_DESKTOP_WIDGETS.find((w) => w.id === id);
+    if (defaultWidget) {
+      const winW = window.innerWidth || 1920;
+      const winH = window.innerHeight || 1080;
+      let x = defaultWidget.x;
+      let y = defaultWidget.y;
+      if (x < 0) x = winW + x;
+      if (y < 0) y = winH + y;
+      updateDesktopWidgetData(id, {
+        x,
+        y,
+        size: defaultWidget.size,
+        width: undefined,
+        height: undefined,
+      });
+      setPositions((prev) => ({ ...prev, [id]: { x, y } }));
+    } else {
+      updateDesktopWidgetData(id, { width: undefined, height: undefined });
+    }
     closeContextMenu();
   };
 
@@ -454,6 +455,7 @@ export const DesktopWidgetsLayer: React.FC = () => {
         const dims = sizes[item.id] || { width: item.width ?? base.width, height: item.height ?? base.height };
         const scaleX = dims.width / base.width;
         const scaleY = dims.height / base.height;
+        const uniformScale = Math.min(scaleX, scaleY);
 
         const isDragging = activeDragId === item.id;
         const isResizing = activeResize?.id === item.id;
@@ -468,6 +470,9 @@ export const DesktopWidgetsLayer: React.FC = () => {
               width: `${dims.width}px`,
               height: `${dims.height}px`,
               padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               ...(isLiquidGlass && desktopSample
                 ? {
                     background: desktopSample.bgRgba,
@@ -499,7 +504,8 @@ export const DesktopWidgetsLayer: React.FC = () => {
                 width: `${base.width}px`,
                 height: `${base.height}px`,
                 padding: `${base.padding}px`,
-                transform: `scale(${scaleX}, ${scaleY})`,
+                transform: `scale(${uniformScale})`,
+                flexShrink: 0,
               }}
             >
               {renderWidgetContent(item)}
@@ -545,8 +551,8 @@ export const DesktopWidgetsLayer: React.FC = () => {
             <button className="desk-context-item" onClick={() => handleToggleLock(contextMenu.id)}>
               <span>{widgets.find((w) => w.id === contextMenu.id)?.locked ? 'Unlock Position' : 'Lock Position'}</span>
             </button>
-            <button className="desk-context-item" onClick={handleResetPositions}>
-              <span>Reset Positions</span>
+            <button className="desk-context-item" onClick={() => handleResetWidget(contextMenu.id)}>
+              <span>Reset Position & Size</span>
             </button>
             <div className="desk-context-divider" />
             <button
