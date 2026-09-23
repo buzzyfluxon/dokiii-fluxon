@@ -23,6 +23,28 @@ import { GalleryWidget } from './GalleryWidget';
 import { MoodBoardWidget } from './MoodBoardWidget';
 import './desktop-widgets.css';
 
+const BASE_SIZE: Record<DesktopWidgetSize, { width: number; height: number; padding: number }> = {
+  small: { width: 144, height: 144, padding: 14 },
+  medium: { width: 304, height: 144, padding: 16 },
+  large: { width: 304, height: 304, padding: 18 },
+};
+
+const MIN_WIDGET_WIDTH = 100;
+const MIN_WIDGET_HEIGHT = 80;
+
+type ResizeDir = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+
+const RESIZE_HANDLES: { dir: ResizeDir; className: string }[] = [
+  { dir: 'n', className: 'edge edge-n' },
+  { dir: 's', className: 'edge edge-s' },
+  { dir: 'e', className: 'edge edge-e' },
+  { dir: 'w', className: 'edge edge-w' },
+  { dir: 'ne', className: 'corner corner-ne' },
+  { dir: 'nw', className: 'corner corner-nw' },
+  { dir: 'se', className: 'corner corner-se' },
+  { dir: 'sw', className: 'corner corner-sw' },
+];
+
 export const DesktopWidgetsLayer: React.FC = () => {
   const {
     dock,
@@ -36,6 +58,17 @@ export const DesktopWidgetsLayer: React.FC = () => {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [sizes, setSizes] = useState<Record<string, { width: number; height: number }>>({});
+  const [activeResize, setActiveResize] = useState<{
+    id: string;
+    dir: ResizeDir;
+    startX: number;
+    startY: number;
+    startW: number;
+    startH: number;
+    startPosX: number;
+    startPosY: number;
+  } | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     id: string;
     x: number;
@@ -73,6 +106,16 @@ export const DesktopWidgetsLayer: React.FC = () => {
     setPositions(initialPos);
   }, [widgets, activeDragId]);
 
+  useEffect(() => {
+    if (activeResize) return;
+    const initialSizes: Record<string, { width: number; height: number }> = {};
+    widgets.forEach((w) => {
+      const base = BASE_SIZE[w.size] || BASE_SIZE.small;
+      initialSizes[w.id] = { width: w.width ?? base.width, height: w.height ?? base.height };
+    });
+    setSizes(initialSizes);
+  }, [widgets, activeResize]);
+
   const handlePointerDown = (id: string, e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     const targetWidget = widgets.find((w) => w.id === id);
@@ -94,9 +137,10 @@ export const DesktopWidgetsLayer: React.FC = () => {
     const winW = window.innerWidth;
     const winH = window.innerHeight;
     const targetWidget = widgets.find((w) => w.id === activeDragId);
-    const size = targetWidget?.size || 'small';
-    const widgetW = size === 'small' ? 144 : 304;
-    const widgetH = size === 'large' ? 304 : 144;
+    const base = BASE_SIZE[targetWidget?.size || 'small'];
+    const currentSize = sizes[activeDragId] || base;
+    const widgetW = currentSize.width;
+    const widgetH = currentSize.height;
 
     const rawX = e.clientX - dragOffset.x;
     const rawY = e.clientY - dragOffset.y;
@@ -147,7 +191,92 @@ export const DesktopWidgetsLayer: React.FC = () => {
 
   const handleResize = (id: string, newSize: DesktopWidgetSize) => {
     setDesktopWidgetSize(id, newSize);
+    updateDesktopWidgetData(id, { width: undefined, height: undefined });
     closeContextMenu();
+  };
+
+  const handleResizeHandlePointerDown = (id: string, dir: ResizeDir, e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    const widget = widgets.find((w) => w.id === id);
+    if (widget?.locked) return;
+    const base = BASE_SIZE[widget?.size || 'small'];
+    const currentSize = sizes[id] || { width: base.width, height: base.height };
+    const currentPos = positions[id] || { x: 50, y: 50 };
+    setActiveResize({
+      id,
+      dir,
+      startX: e.clientX,
+      startY: e.clientY,
+      startW: currentSize.width,
+      startH: currentSize.height,
+      startPosX: currentPos.x,
+      startPosY: currentPos.y,
+    });
+    try {
+      window.electronAPI?.setIgnoreMouseEvents(false);
+    } catch (_) {}
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handleResizeHandlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!activeResize) return;
+    const { id, dir, startX, startY, startW, startH, startPosX, startPosY } = activeResize;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    let newW = startW;
+    let newH = startH;
+    let newX = startPosX;
+    let newY = startPosY;
+
+    if (dir.includes('e')) newW = startW + dx;
+    if (dir.includes('s')) newH = startH + dy;
+    if (dir.includes('w')) {
+      newW = startW - dx;
+      newX = startPosX + dx;
+    }
+    if (dir.includes('n')) {
+      newH = startH - dy;
+      newY = startPosY + dy;
+    }
+
+    if (newW < MIN_WIDGET_WIDTH) {
+      if (dir.includes('w')) newX = startPosX + (startW - MIN_WIDGET_WIDTH);
+      newW = MIN_WIDGET_WIDTH;
+    }
+    if (newH < MIN_WIDGET_HEIGHT) {
+      if (dir.includes('n')) newY = startPosY + (startH - MIN_WIDGET_HEIGHT);
+      newH = MIN_WIDGET_HEIGHT;
+    }
+
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    newX = Math.max(0, Math.min(winW - newW, newX));
+    newY = Math.max(0, Math.min(winH - newH, newY));
+    newW = Math.min(newW, winW - newX);
+    newH = Math.min(newH, winH - newY);
+
+    setSizes((prev) => ({ ...prev, [id]: { width: newW, height: newH } }));
+    setPositions((prev) => ({ ...prev, [id]: { x: newX, y: newY } }));
+  };
+
+  const handleResizeHandlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!activeResize) return;
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch (_) {}
+    const { id } = activeResize;
+    const finalSize = sizes[id];
+    const finalPos = positions[id];
+    if (finalSize) {
+      updateDesktopWidgetData(id, {
+        width: Math.round(finalSize.width),
+        height: Math.round(finalSize.height),
+        ...(finalPos ? { x: Math.round(finalPos.x), y: Math.round(finalPos.y) } : {}),
+      });
+    }
+    setActiveResize(null);
   };
 
   const handleToggleLock = (id: string) => {
@@ -321,15 +450,24 @@ export const DesktopWidgetsLayer: React.FC = () => {
           y: item.y < 0 ? window.innerHeight + item.y : item.y,
         };
 
+        const base = BASE_SIZE[item.size] || BASE_SIZE.small;
+        const dims = sizes[item.id] || { width: item.width ?? base.width, height: item.height ?? base.height };
+        const scaleX = dims.width / base.width;
+        const scaleY = dims.height / base.height;
+
         const isDragging = activeDragId === item.id;
+        const isResizing = activeResize?.id === item.id;
 
         return (
           <div
             key={item.id}
-            className={`desktop-widget-container size-${item.size} ${isDragging ? 'is-dragging' : ''} ${item.locked ? 'is-locked' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
+            className={`desktop-widget-container size-${item.size} ${isDragging ? 'is-dragging' : ''} ${isResizing ? 'is-resizing' : ''} ${item.locked ? 'is-locked' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
             style={{
               left: `${pos.x}px`,
               top: `${pos.y}px`,
+              width: `${dims.width}px`,
+              height: `${dims.height}px`,
+              padding: 0,
               ...(isLiquidGlass && desktopSample
                 ? {
                     background: desktopSample.bgRgba,
@@ -349,13 +487,33 @@ export const DesktopWidgetsLayer: React.FC = () => {
             }}
             onMouseLeave={() => {
               try {
-                if (!activeDragId && !contextMenu && !editPrompt) {
+                if (!activeDragId && !activeResize && !contextMenu && !editPrompt) {
                   window.electronAPI?.setIgnoreMouseEvents(true, true);
                 }
               } catch (_) {}
             }}
           >
-            {renderWidgetContent(item)}
+            <div
+              className="desktop-widget-content-scaler"
+              style={{
+                width: `${base.width}px`,
+                height: `${base.height}px`,
+                padding: `${base.padding}px`,
+                transform: `scale(${scaleX}, ${scaleY})`,
+              }}
+            >
+              {renderWidgetContent(item)}
+            </div>
+            {!item.locked &&
+              RESIZE_HANDLES.map(({ dir, className }) => (
+                <div
+                  key={dir}
+                  className={`desktop-widget-resize-handle ${className}`}
+                  onPointerDown={(e) => handleResizeHandlePointerDown(item.id, dir, e)}
+                  onPointerMove={handleResizeHandlePointerMove}
+                  onPointerUp={handleResizeHandlePointerUp}
+                />
+              ))}
           </div>
         );
       })}

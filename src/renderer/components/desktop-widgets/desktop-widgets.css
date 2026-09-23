@@ -24,6 +24,7 @@
   color: #ffffff;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
   cursor: grab;
   isolation: isolate;
@@ -46,23 +47,104 @@
   z-index: 1000;
 }
 
-.desktop-widget-container.size-small {
-  width: 144px;
-  height: 144px;
-  padding: 14px;
+.desktop-widget-container.is-resizing {
+  opacity: 0.94;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  z-index: 1000;
 }
 
-.desktop-widget-container.size-medium {
-  width: 304px;
-  height: 144px;
-  padding: 16px;
+.desktop-widget-content-scaler {
+  transform-origin: top left;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
-.desktop-widget-container.size-large {
-  width: 304px;
-  height: 304px;
-  padding: 18px;
+.desktop-widget-resize-handle {
+  position: absolute;
+  z-index: 5;
 }
+
+.desktop-widget-resize-handle.edge-n {
+  top: -4px;
+  left: 12px;
+  right: 12px;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.desktop-widget-resize-handle.edge-s {
+  bottom: -4px;
+  left: 12px;
+  right: 12px;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.desktop-widget-resize-handle.edge-e {
+  top: 12px;
+  bottom: 12px;
+  right: -4px;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.desktop-widget-resize-handle.edge-w {
+  top: 12px;
+  bottom: 12px;
+  left: -4px;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.desktop-widget-resize-handle.corner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.desktop-widget-resize-handle.corner-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nwse-resize;
+}
+
+.desktop-widget-resize-handle.corner-ne {
+  top: -6px;
+  right: -6px;
+  cursor: nesw-resize;
+}
+
+.desktop-widget-resize-handle.corner-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: nesw-resize;
+}
+
+.desktop-widget-resize-handle.corner-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+}
+
+.desktop-widget-container:hover .desktop-widget-resize-handle.corner {
+  opacity: 1;
+}
+
+.desktop-widget-resize-handle.corner:hover {
+  transform: scale(1.3);
+}
+
+.desktop-widget-container.is-dragging .desktop-widget-resize-handle {
+  display: none;
+}
+
 
 .desk-widget-header {
   display: flex;

@@ -67,6 +67,8 @@ export interface DesktopWidgetItem {
   x: number;
   y: number;
   size: DesktopWidgetSize;
+  width?: number;
+  height?: number;
   customTitle?: string;
   city?: string;
   pinned?: boolean;
