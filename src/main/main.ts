@@ -10,6 +10,7 @@ import { registerProcessHandlers } from './ipc/process';
 import { registerScreenshotHandlers } from './ipc/screenshot';
 import { registerStartupHandlers } from './ipc/startup';
 import { registerWallpaperHandlers, cleanupWallpaperWatcher } from './ipc/wallpaper';
+import { initAutoUpdater, cleanupAutoUpdater } from './updater';
 import { killAllPowerShell } from './utils/powershell';
 import { PROFILE, instrumentIpc, startProfiler } from './utils/profiler';
 import { createTray } from './tray';
@@ -52,6 +53,7 @@ app.on('child-process-gone', (_e, details) => {
 });
 app.on('before-quit', () => {
   cleanupWallpaperWatcher();
+  cleanupAutoUpdater();
   killAllPowerShell();
   logDebug('before-quit fired');
 });
@@ -399,6 +401,7 @@ if (!gotSingleInstanceLock) {
     registerConfigHandlers();
     registerSetupHandlers();
     registerWallpaperHandlers(() => mainWindow);
+    initAutoUpdater(() => mainWindow);
 
     createWindow();
   });

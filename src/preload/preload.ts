@@ -68,4 +68,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('wallpaper:colors-updated', handler);
   },
   appReady: () => ipcRenderer.send('app:ready'),
+  checkForUpdates: (manual?: boolean) => ipcRenderer.invoke('updater:check', { manual }),
+  startUpdateDownload: () => ipcRenderer.invoke('updater:download'),
+  installUpdate: () => ipcRenderer.invoke('updater:install'),
+  dismissUpdate: (version: string) => ipcRenderer.invoke('updater:dismiss', version),
+  getUpdaterStatus: () => ipcRenderer.invoke('updater:getStatus'),
+  onUpdaterStatus: (callback: (status: any) => void) => {
+    const handler = (_event: any, status: any) => callback(status);
+    ipcRenderer.on('updater:status', handler);
+    return () => ipcRenderer.removeListener('updater:status', handler);
+  },
 });

@@ -65,7 +65,22 @@ export interface ElectronAPI {
   getWallpaperColors(): Promise<WallpaperPalette>;
   onWallpaperColorsUpdated(callback: (palette: WallpaperPalette) => void): () => void;
   appReady?(): void;
+  checkForUpdates(manual?: boolean): Promise<void>;
+  startUpdateDownload(): Promise<void>;
+  installUpdate(): Promise<void>;
+  dismissUpdate(version: string): Promise<void>;
+  getUpdaterStatus(): Promise<UpdaterStatus>;
+  onUpdaterStatus(callback: (status: UpdaterStatus) => void): () => void;
 }
+
+export type UpdaterStatus =
+  | { status: 'idle' }
+  | { status: 'checking'; isManual: boolean }
+  | { status: 'available'; version: string; isManual: boolean }
+  | { status: 'not-available'; isManual: boolean }
+  | { status: 'downloading'; version: string; percent: number }
+  | { status: 'downloaded'; version: string }
+  | { status: 'error'; message: string; phase: 'check' | 'download'; isManual: boolean };
 
 export interface RegionSample {
   r: number;

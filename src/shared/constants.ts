@@ -28,6 +28,12 @@ export const WIDGET_IDS = {
   COUNTDOWN: 'countdown',
   GOALS: 'goals',
   CAR_CARD: 'car-card',
+  TRAVEL_CARD: 'travel-card',
+  BOOK_CARD: 'book-card',
+  MOVIE_CARD: 'movie-card',
+  POLAROID: 'polaroid',
+  GALLERY: 'gallery',
+  MOOD_BOARD: 'mood-board',
 } as const;
 
 export type WidgetId = (typeof WIDGET_IDS)[keyof typeof WIDGET_IDS];
@@ -45,7 +51,13 @@ export type DesktopWidgetType =
   | 'quote-card'
   | 'countdown'
   | 'goals'
-  | 'car-card';
+  | 'car-card'
+  | 'travel-card'
+  | 'book-card'
+  | 'movie-card'
+  | 'polaroid'
+  | 'gallery'
+  | 'mood-board';
 
 export type DesktopWidgetSize = 'small' | 'medium' | 'large';
 
@@ -69,7 +81,7 @@ export interface WidgetDefinition {
   icon: string;
   defaultWidth: 'compact' | 'normal' | 'wide';
   description: string;
-  supportsDesktop?: boolean;
+  placement: 'dock' | 'desktop';
 }
 
 export type WidgetCategory =
@@ -94,35 +106,41 @@ export const WIDGET_CATEGORIES: { id: WidgetCategory; label: string }[] = [
 ];
 
 export const WIDGET_REGISTRY: WidgetDefinition[] = [
-  { id: WIDGET_IDS.APP_LAUNCHER, name: 'Apps', category: 'apps-files', icon: 'apps', defaultWidth: 'compact', description: 'Launch installed applications', supportsDesktop: false },
-  { id: WIDGET_IDS.RECENTLY_OPENED, name: 'Recently Opened', category: 'apps-files', icon: 'recent', defaultWidth: 'compact', description: 'Recently opened files and apps', supportsDesktop: false },
-  { id: WIDGET_IDS.RECYCLE_BIN, name: 'Recycle Bin', category: 'apps-files', icon: 'trash', defaultWidth: 'compact', description: 'Recycle bin status and actions', supportsDesktop: false },
-  { id: WIDGET_IDS.FILE_SEARCH, name: 'Search', category: 'apps-files', icon: 'search', defaultWidth: 'normal', description: 'Search files and applications', supportsDesktop: false },
-  { id: WIDGET_IDS.COMMANDS, name: 'Commands', category: 'apps-files', icon: 'command', defaultWidth: 'normal', description: 'Quick command launcher', supportsDesktop: false },
-  { id: WIDGET_IDS.DOWNLOADS, name: 'Downloads', category: 'apps-files', icon: 'download', defaultWidth: 'compact', description: 'Downloads folder access', supportsDesktop: false },
-  { id: WIDGET_IDS.RECENT_SCREENSHOTS, name: 'Recent Screenshots', category: 'apps-files', icon: 'camera', defaultWidth: 'compact', description: 'View recent screenshots', supportsDesktop: false },
-  { id: WIDGET_IDS.SCREENSHOT_CAPTURE, name: 'Screenshot Capture', category: 'utilities', icon: 'crop', defaultWidth: 'compact', description: 'Capture screen regions', supportsDesktop: false },
-  { id: WIDGET_IDS.STORAGE, name: 'Storage', category: 'system', icon: 'storage', defaultWidth: 'compact', description: 'Disk storage usage', supportsDesktop: false },
-  { id: WIDGET_IDS.MEDIA_PLAYER, name: 'Media Player', category: 'media', icon: 'music', defaultWidth: 'wide', description: 'Control playing media', supportsDesktop: false },
-  { id: WIDGET_IDS.CLOCK, name: 'Digital Clock', category: 'time', icon: 'clock', defaultWidth: 'compact', description: 'Current time display', supportsDesktop: false },
-  { id: WIDGET_IDS.WORLD_CLOCK, name: 'World Clock', category: 'time', icon: 'globe', defaultWidth: 'normal', description: 'World map and timezone clock', supportsDesktop: true },
-  { id: WIDGET_IDS.DAY_PROGRESS, name: 'Day Progress', category: 'time', icon: 'progress', defaultWidth: 'compact', description: 'Progress through the day', supportsDesktop: false },
-  { id: WIDGET_IDS.MONTH_PROGRESS, name: 'Month Progress', category: 'time', icon: 'progress', defaultWidth: 'compact', description: 'Progress through the month', supportsDesktop: false },
-  { id: WIDGET_IDS.YEAR_PROGRESS, name: 'Year Progress', category: 'time', icon: 'progress', defaultWidth: 'compact', description: 'Progress through the year', supportsDesktop: false },
-  { id: WIDGET_IDS.NOTES, name: 'Notes', category: 'productivity', icon: 'note', defaultWidth: 'normal', description: 'Quick notes', supportsDesktop: false },
-  { id: WIDGET_IDS.CURRENCY, name: 'Currency', category: 'finance', icon: 'currency', defaultWidth: 'compact', description: 'Currency conversion rates', supportsDesktop: false },
-  { id: WIDGET_IDS.DATE_DAY, name: 'Date & Day', category: 'time', icon: 'calendar', defaultWidth: 'compact', description: 'Large day, date, and schedule title', supportsDesktop: true },
-  { id: WIDGET_IDS.SYSTEM_CONTROLS, name: 'System Controls', category: 'system', icon: 'settings', defaultWidth: 'compact', description: 'Volume slider, headphone toggle, and mute', supportsDesktop: true },
-  { id: WIDGET_IDS.SYSTEM_MONITOR, name: 'System Monitor', category: 'system', icon: 'storage', defaultWidth: 'compact', description: 'CPU, RAM, and SSD multi-ring gauge', supportsDesktop: true },
-  { id: WIDGET_IDS.BATTERY, name: 'Battery', category: 'system', icon: 'command', defaultWidth: 'compact', description: 'Battery charge ring and percentage', supportsDesktop: true },
-  { id: WIDGET_IDS.ANALOG_CLOCK, name: 'Analog Clock', category: 'time', icon: 'clock', defaultWidth: 'compact', description: 'Classic macOS analog clock dial', supportsDesktop: true },
-  { id: WIDGET_IDS.CALENDAR, name: 'Calendar Month', category: 'time', icon: 'calendar', defaultWidth: 'compact', description: 'Full month calendar grid', supportsDesktop: true },
-  { id: WIDGET_IDS.MOON_PHASE, name: 'Moon Phase', category: 'time', icon: 'globe', defaultWidth: 'compact', description: 'Live astronomical moon phase', supportsDesktop: true },
-  { id: WIDGET_IDS.CUSTOM_TEXT, name: 'Custom Text', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'Your own text, reminder or short phrase', supportsDesktop: true },
-  { id: WIDGET_IDS.QUOTE_CARD, name: 'Quote Card', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A quote and author you choose', supportsDesktop: true },
-  { id: WIDGET_IDS.COUNTDOWN, name: 'Countdown', category: 'personal', icon: 'progress', defaultWidth: 'compact', description: 'Count down to a date you set', supportsDesktop: true },
-  { id: WIDGET_IDS.GOALS, name: 'Goals', category: 'personal', icon: 'progress', defaultWidth: 'compact', description: 'Track up to 5 personal goals', supportsDesktop: true },
-  { id: WIDGET_IDS.CAR_CARD, name: 'Car Card', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A visual card for your favorite car', supportsDesktop: true },
+  { id: WIDGET_IDS.APP_LAUNCHER, name: 'Apps', category: 'apps-files', icon: 'apps', defaultWidth: 'compact', description: 'Launch installed applications', placement: 'dock' },
+  { id: WIDGET_IDS.RECENTLY_OPENED, name: 'Recently Opened', category: 'apps-files', icon: 'recent', defaultWidth: 'compact', description: 'Recently opened files and apps', placement: 'dock' },
+  { id: WIDGET_IDS.RECYCLE_BIN, name: 'Recycle Bin', category: 'apps-files', icon: 'trash', defaultWidth: 'compact', description: 'Recycle bin status and actions', placement: 'dock' },
+  { id: WIDGET_IDS.FILE_SEARCH, name: 'Search', category: 'apps-files', icon: 'search', defaultWidth: 'normal', description: 'Search files and applications', placement: 'dock' },
+  { id: WIDGET_IDS.COMMANDS, name: 'Commands', category: 'apps-files', icon: 'command', defaultWidth: 'normal', description: 'Quick command launcher', placement: 'dock' },
+  { id: WIDGET_IDS.DOWNLOADS, name: 'Downloads', category: 'apps-files', icon: 'download', defaultWidth: 'compact', description: 'Downloads folder access', placement: 'dock' },
+  { id: WIDGET_IDS.RECENT_SCREENSHOTS, name: 'Recent Screenshots', category: 'apps-files', icon: 'camera', defaultWidth: 'compact', description: 'View recent screenshots', placement: 'dock' },
+  { id: WIDGET_IDS.SCREENSHOT_CAPTURE, name: 'Screenshot Capture', category: 'utilities', icon: 'crop', defaultWidth: 'compact', description: 'Capture screen regions', placement: 'dock' },
+  { id: WIDGET_IDS.STORAGE, name: 'Storage', category: 'system', icon: 'storage', defaultWidth: 'compact', description: 'Disk storage usage', placement: 'dock' },
+  { id: WIDGET_IDS.MEDIA_PLAYER, name: 'Media Player', category: 'media', icon: 'music', defaultWidth: 'wide', description: 'Control playing media', placement: 'dock' },
+  { id: WIDGET_IDS.CLOCK, name: 'Digital Clock', category: 'time', icon: 'clock', defaultWidth: 'compact', description: 'Current time display', placement: 'dock' },
+  { id: WIDGET_IDS.WORLD_CLOCK, name: 'World Clock', category: 'time', icon: 'globe', defaultWidth: 'normal', description: 'World map and timezone clock', placement: 'desktop' },
+  { id: WIDGET_IDS.DAY_PROGRESS, name: 'Day Progress', category: 'time', icon: 'progress', defaultWidth: 'compact', description: 'Progress through the day', placement: 'dock' },
+  { id: WIDGET_IDS.MONTH_PROGRESS, name: 'Month Progress', category: 'time', icon: 'progress', defaultWidth: 'compact', description: 'Progress through the month', placement: 'dock' },
+  { id: WIDGET_IDS.YEAR_PROGRESS, name: 'Year Progress', category: 'time', icon: 'progress', defaultWidth: 'compact', description: 'Progress through the year', placement: 'dock' },
+  { id: WIDGET_IDS.NOTES, name: 'Notes', category: 'productivity', icon: 'note', defaultWidth: 'normal', description: 'Quick notes', placement: 'dock' },
+  { id: WIDGET_IDS.CURRENCY, name: 'Currency', category: 'finance', icon: 'currency', defaultWidth: 'compact', description: 'Currency conversion rates', placement: 'dock' },
+  { id: WIDGET_IDS.DATE_DAY, name: 'Date & Day', category: 'time', icon: 'calendar', defaultWidth: 'compact', description: 'Large day, date, and schedule title', placement: 'desktop' },
+  { id: WIDGET_IDS.SYSTEM_CONTROLS, name: 'System Controls', category: 'system', icon: 'settings', defaultWidth: 'compact', description: 'Volume slider, headphone toggle, and mute', placement: 'desktop' },
+  { id: WIDGET_IDS.SYSTEM_MONITOR, name: 'System Monitor', category: 'system', icon: 'storage', defaultWidth: 'compact', description: 'CPU, RAM, and SSD multi-ring gauge', placement: 'desktop' },
+  { id: WIDGET_IDS.BATTERY, name: 'Battery', category: 'system', icon: 'command', defaultWidth: 'compact', description: 'Battery charge ring and percentage', placement: 'desktop' },
+  { id: WIDGET_IDS.ANALOG_CLOCK, name: 'Analog Clock', category: 'time', icon: 'clock', defaultWidth: 'compact', description: 'Classic macOS analog clock dial', placement: 'desktop' },
+  { id: WIDGET_IDS.CALENDAR, name: 'Calendar Month', category: 'time', icon: 'calendar', defaultWidth: 'compact', description: 'Full month calendar grid', placement: 'desktop' },
+  { id: WIDGET_IDS.MOON_PHASE, name: 'Moon Phase', category: 'time', icon: 'globe', defaultWidth: 'compact', description: 'Live astronomical moon phase', placement: 'desktop' },
+  { id: WIDGET_IDS.CUSTOM_TEXT, name: 'Custom Text', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'Your own text, reminder or short phrase', placement: 'desktop' },
+  { id: WIDGET_IDS.QUOTE_CARD, name: 'Quote Card', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A quote and author you choose', placement: 'desktop' },
+  { id: WIDGET_IDS.COUNTDOWN, name: 'Countdown', category: 'personal', icon: 'progress', defaultWidth: 'compact', description: 'Count down to a date you set', placement: 'desktop' },
+  { id: WIDGET_IDS.GOALS, name: 'Goals', category: 'personal', icon: 'progress', defaultWidth: 'compact', description: 'Track up to 5 personal goals', placement: 'desktop' },
+  { id: WIDGET_IDS.CAR_CARD, name: 'Car Card', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A visual card for your favorite car', placement: 'desktop' },
+  { id: WIDGET_IDS.TRAVEL_CARD, name: 'Travel Card', category: 'personal', icon: 'globe', defaultWidth: 'compact', description: 'A minimal postcard for your next destination', placement: 'desktop' },
+  { id: WIDGET_IDS.BOOK_CARD, name: 'Book Card', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'Cover, title, author and reading progress', placement: 'desktop' },
+  { id: WIDGET_IDS.MOVIE_CARD, name: 'Movie / Game Card', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'Poster, title, rating and watch/play status', placement: 'desktop' },
+  { id: WIDGET_IDS.POLAROID, name: 'Polaroid', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'One photo in a Polaroid-style frame', placement: 'desktop' },
+  { id: WIDGET_IDS.GALLERY, name: 'Gallery', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A simple 2x2 photo grid', placement: 'desktop' },
+  { id: WIDGET_IDS.MOOD_BOARD, name: 'Mood Board', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A 2-6 image collage', placement: 'desktop' },
 ];
 
 export const DEFAULT_ENABLED_WIDGETS: WidgetId[] = [

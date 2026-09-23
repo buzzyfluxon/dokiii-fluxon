@@ -55,6 +55,15 @@ export const IconDownload: React.FC<IconProps> = ({ size = 16, color = 'currentC
   </svg>
 );
 
+export const IconRefresh: React.FC<IconProps> = ({ size = 16, color = 'currentColor', className, style }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+    <path d="M21 12a9 9 0 0 1-15.3 6.4L3 16" />
+    <path d="M3 12a9 9 0 0 1 15.3-6.4L21 8" />
+    <polyline points="3 21 3 16 8 16" />
+    <polyline points="21 3 21 8 16 8" />
+  </svg>
+);
+
 export const IconCamera: React.FC<IconProps> = ({ size = 16, color = 'currentColor', className, style }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -281,6 +290,14 @@ export const WidgetIcon: React.FC<{ id: string; size?: number; color?: string; c
     case 'goals':
       return <IconProgressRing size={size} color={color} className={className} />;
     case 'car-card':
+      return <IconNote size={size} color={color} className={className} />;
+    case 'travel-card':
+      return <IconGlobe size={size} color={color} className={className} />;
+    case 'book-card':
+    case 'movie-card':
+    case 'polaroid':
+    case 'gallery':
+    case 'mood-board':
       return <IconNote size={size} color={color} className={className} />;
     default:
       return <IconApps size={size} color={color} className={className} />;

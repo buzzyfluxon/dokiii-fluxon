@@ -143,24 +143,7 @@ const WidgetLibrary: React.FC = () => {
                     <span className="wl-widget-name">{widget.name}</span>
                     <span className="wl-widget-desc">{widget.description}</span>
                     <div style={{ display: 'flex', gap: '6px', marginTop: '6px', width: '100%' }}>
-                      <button
-                        type="button"
-                        style={{
-                          flex: 1,
-                          padding: '4px 8px',
-                          fontSize: '11px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          background: enabledWidgets.includes(widget.id) ? '#ff453a' : '#0a84ff',
-                          color: '#ffffff',
-                          cursor: 'pointer',
-                          fontWeight: 600,
-                        }}
-                        onClick={() => toggleWidget(widget.id as WidgetId)}
-                      >
-                        {enabledWidgets.includes(widget.id) ? 'Remove Dock' : '+ Dock'}
-                      </button>
-                      {widget.supportsDesktop && (
+                      {widget.placement === 'dock' ? (
                         <button
                           type="button"
                           style={{
@@ -168,8 +151,26 @@ const WidgetLibrary: React.FC = () => {
                             padding: '4px 8px',
                             fontSize: '11px',
                             borderRadius: '6px',
-                            border: '1px solid rgba(255,255,255,0.15)',
-                            background: 'rgba(255,255,255,0.1)',
+                            border: 'none',
+                            background: enabledWidgets.includes(widget.id) ? '#ff453a' : '#0a84ff',
+                            color: '#ffffff',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                          onClick={() => toggleWidget(widget.id as WidgetId)}
+                        >
+                          {enabledWidgets.includes(widget.id) ? 'Remove Dock' : '+ Dock'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          style={{
+                            flex: 1,
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: '#0a84ff',
                             color: '#ffffff',
                             cursor: 'pointer',
                             fontWeight: 600,

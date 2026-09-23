@@ -10,6 +10,10 @@ extraResources:
   - from: build
     to: build
 afterPack: scripts/after-pack.js
+publish:
+  provider: github
+  owner: buzzyfluxon
+  repo: dokiii-fluxon
 win:
   icon: build/icon.ico
   signAndEditExecutable: false
@@ -25,3 +29,4 @@ nsis:
   shortcutName: DOKIII
   artifactName: DOKIII-Setup.exe
   uninstallDisplayName: DOKIII
+  differentialPackage: true

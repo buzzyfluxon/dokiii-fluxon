@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useConfigStore, DokiiiAppTab } from '../store/configStore';
 import { useWidgetStore } from '../store/widgetStore';
 import { useLiquidGlassStore } from '../store/liquidGlassStore';
+import { useUpdaterStore } from '../store/updaterStore';
 import {
   WIDGET_REGISTRY,
   WIDGET_CATEGORIES,
@@ -9,7 +10,7 @@ import {
   DesktopWidgetType,
   DesktopWidgetSize,
 } from '../../shared/constants';
-import { IconClose, IconMinus, IconMaximize, IconRestore } from './Icons';
+import { IconClose, IconMinus, IconMaximize, IconRestore, IconRefresh } from './Icons';
 import appIcon from '../assets/icon.png';
 import './dokiii-app.css';
 
@@ -37,6 +38,10 @@ export const DokiiiApp: React.FC = () => {
   const { enabledWidgets, toggleWidget } = useWidgetStore();
   const isLiquidGlass = Boolean(dock.liquidGlassEnabled);
   const modalSample = useLiquidGlassStore((s) => s.getModalSample());
+  const updater = useUpdaterStore((s) => s.updater);
+  const checkForUpdates = useUpdaterStore((s) => s.checkForUpdates);
+  const startUpdateDownload = useUpdaterStore((s) => s.startDownload);
+  const installUpdate = useUpdaterStore((s) => s.installUpdate);
 
   const [newProfileName, setNewProfileName] = useState('');
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
@@ -229,7 +234,6 @@ export const DokiiiApp: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {catWidgets.map((w) => {
                 const isDockEnabled = enabledWidgets.includes(w.id);
-                const isDesktop = w.supportsDesktop;
 
                 return (
                   <div key={w.id} className="dokiii-row">
@@ -238,20 +242,21 @@ export const DokiiiApp: React.FC = () => {
                       <span className="dokiii-row-desc">{w.description}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      {isDesktop && (
+                      {w.placement === 'desktop' ? (
                         <button
                           className="dokiii-btn secondary"
                           onClick={() => addDesktopWidget(w.id as DesktopWidgetType, 'small')}
                         >
                           + Desktop
                         </button>
+                      ) : (
+                        <button
+                          className={`dokiii-btn ${isDockEnabled ? 'danger' : 'primary'}`}
+                          onClick={() => toggleWidget(w.id)}
+                        >
+                          {isDockEnabled ? 'Remove Dock' : '+ Dock'}
+                        </button>
                       )}
-                      <button
-                        className={`dokiii-btn ${isDockEnabled ? 'danger' : 'primary'}`}
-                        onClick={() => toggleWidget(w.id)}
-                      >
-                        {isDockEnabled ? 'Remove Dock' : '+ Dock'}
-                      </button>
                     </div>
                   </div>
                 );
@@ -736,6 +741,48 @@ export const DokiiiApp: React.FC = () => {
     );
   };
 
+  const updateStatusLabel = (() => {
+    switch (updater.status) {
+      case 'checking':
+        return 'Checking for updates…';
+      case 'not-available':
+        return "You're up to date";
+      case 'available':
+        return `DOKIII ${updater.version} is available`;
+      case 'downloading':
+        return `Downloading update… ${updater.percent}%`;
+      case 'downloaded':
+        return `DOKIII ${updater.version} is ready to install`;
+      case 'error':
+        return updater.phase === 'download' ? "Couldn't download the update" : "Couldn't check for updates";
+      default:
+        return 'Check for the latest version of DOKIII';
+    }
+  })();
+
+  const updateAction = (() => {
+    switch (updater.status) {
+      case 'checking':
+        return { label: 'Checking…', onClick: undefined, disabled: true, variant: 'secondary', icon: false };
+      case 'available':
+        return { label: 'Update Now', onClick: startUpdateDownload, disabled: false, variant: 'primary', icon: false };
+      case 'downloading':
+        return null;
+      case 'downloaded':
+        return { label: 'Restart & Install', onClick: installUpdate, disabled: false, variant: 'primary', icon: false };
+      case 'error':
+        return {
+          label: 'Retry',
+          onClick: updater.phase === 'download' ? startUpdateDownload : checkForUpdates,
+          disabled: false,
+          variant: 'secondary',
+          icon: true,
+        };
+      default:
+        return { label: 'Check for Updates', onClick: checkForUpdates, disabled: false, variant: 'secondary', icon: true };
+    }
+  })();
+
   const renderSettingsTab = () => (
     <div className="dokiii-content-body">
       <div className="dokiii-card">
@@ -833,6 +880,54 @@ export const DokiiiApp: React.FC = () => {
       </div>
 
       <div className="dokiii-card">
+        <span className="dokiii-card-title">Updates</span>
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Installed Version</span>
+            <span className="dokiii-row-desc">DOKIII {__APP_VERSION__}</span>
+          </div>
+        </div>
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Automatic Updates</span>
+            <span className="dokiii-row-desc">{updateStatusLabel}</span>
+          </div>
+          {updateAction && (
+            <button
+              className={`dokiii-btn ${updateAction.variant}`}
+              disabled={updateAction.disabled}
+              onClick={updateAction.onClick}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              {updateAction.icon && <IconRefresh size={12} />}
+              {updateAction.label}
+            </button>
+          )}
+        </div>
+        {updater.status === 'downloading' && (
+          <div
+            style={{
+              width: '100%',
+              height: '4px',
+              borderRadius: '2px',
+              background: 'rgba(255,255,255,0.1)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${updater.percent}%`,
+                height: '100%',
+                background: '#0a84ff',
+                borderRadius: '2px',
+                transition: 'width 220ms ease',
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="dokiii-card">
         <span className="dokiii-card-title">Maintenance & Uninstall</span>
         <div className="dokiii-row">
           <div className="dokiii-row-label">
@@ -896,12 +991,11 @@ export const DokiiiApp: React.FC = () => {
         </button>
         <button
           className="dokiii-btn secondary"
-          onClick={() => {
-            try {
-              window.electronAPI?.openUrl('https://github.com/buzzyfluxon/dokiii-fluxon/releases/latest');
-            } catch (_) {}
-          }}
+          disabled={updateAction?.disabled}
+          onClick={() => checkForUpdates()}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
         >
+          <IconRefresh size={12} />
           Check for Updates
         </button>
         <button
@@ -915,6 +1009,11 @@ export const DokiiiApp: React.FC = () => {
           Uninstall DOKIII
         </button>
       </div>
+      {updater.status !== 'idle' && (
+        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', marginTop: '10px', display: 'block' }}>
+          {updateStatusLabel}
+        </span>
+      )}
     </div>
   );
 

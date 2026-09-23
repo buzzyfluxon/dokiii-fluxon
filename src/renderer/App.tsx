@@ -2,12 +2,14 @@ import React, { useEffect, createContext, useContext, useState, useCallback } fr
 import { useWidgetStore } from './store/widgetStore';
 import { useConfigStore } from './store/configStore';
 import { useLiquidGlassStore } from './store/liquidGlassStore';
+import { useUpdaterStore } from './store/updaterStore';
 import Dock from './components/Dock';
 import WidgetLibrary from './components/WidgetLibrary';
 import Settings from './components/Settings';
 import { DesktopWidgetsLayer } from './components/desktop-widgets/DesktopWidgetsLayer';
 import { DokiiiApp } from './components/DokiiiApp';
 import Halo from './components/halo/Halo';
+import UpdateNotification from './components/updater/UpdateNotification';
 import './styles/global.css';
 import './styles/dock.css';
 import './styles/widgets.css';
@@ -39,6 +41,8 @@ const App: React.FC = () => {
   const toggleSettings = useConfigStore((s) => s.toggleSettings);
   const openDokiiiApp = useConfigStore((s) => s.openDokiiiApp);
   const closeOverlays = useConfigStore((s) => s.closeOverlays);
+  const setUpdaterStatus = useUpdaterStore((s) => s.setUpdaterStatus);
+  const hydrateUpdater = useUpdaterStore((s) => s.hydrate);
 
   const [activePopover, setActivePopover] = useState<string | null>(null);
 
@@ -77,6 +81,11 @@ const App: React.FC = () => {
       updateConfig(cfg);
     });
 
+    hydrateUpdater();
+    const removeUpdaterStatus = window.electronAPI?.onUpdaterStatus?.((status) => {
+      setUpdaterStatus(status);
+    });
+
     window.electronAPI?.appReady?.();
 
     return () => {
@@ -84,8 +93,9 @@ const App: React.FC = () => {
       removeShowSettings?.();
       removeShowApp?.();
       removeConfigChanged?.();
+      removeUpdaterStatus?.();
     };
-  }, [toggleWidgetLibrary, toggleSettings, openDokiiiApp, updateConfig]);
+  }, [toggleWidgetLibrary, toggleSettings, openDokiiiApp, updateConfig, hydrateUpdater, setUpdaterStatus]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -128,6 +138,7 @@ const App: React.FC = () => {
         {isWidgetLibraryOpen && <WidgetLibrary />}
         {isSettingsOpen && <Settings />}
         {isDokiiiAppOpen && <DokiiiApp />}
+        <UpdateNotification />
       </div>
     </PopoverContext.Provider>
   );

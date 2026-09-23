@@ -17,10 +17,12 @@
     "start": "npm run build && electron .",
     "pack": "electron-builder --publish never",
     "dist": "npm run build && npm run pack",
+    "release": "npm run build && electron-builder --publish always",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
     "electron-store": "^8.1.0",
+    "electron-updater": "^6.8.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zustand": "^4.5.0"

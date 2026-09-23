@@ -15,6 +15,12 @@ import { QuoteCardWidget } from './QuoteCardWidget';
 import { CountdownWidget } from './CountdownWidget';
 import { GoalsWidget } from './GoalsWidget';
 import { CarCardWidget } from './CarCardWidget';
+import { TravelCardWidget } from './TravelCardWidget';
+import { BookCardWidget } from './BookCardWidget';
+import { MovieCardWidget } from './MovieCardWidget';
+import { PolaroidWidget } from './PolaroidWidget';
+import { GalleryWidget } from './GalleryWidget';
+import { MoodBoardWidget } from './MoodBoardWidget';
 import './desktop-widgets.css';
 
 export const DesktopWidgetsLayer: React.FC = () => {
@@ -247,6 +253,54 @@ export const DesktopWidgetsLayer: React.FC = () => {
       case 'car-card':
         return (
           <CarCardWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'travel-card':
+        return (
+          <TravelCardWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'book-card':
+        return (
+          <BookCardWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'movie-card':
+        return (
+          <MovieCardWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'polaroid':
+        return (
+          <PolaroidWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'gallery':
+        return (
+          <GalleryWidget
+            size={item.size}
+            data={item.data}
+            onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
+          />
+        );
+      case 'mood-board':
+        return (
+          <MoodBoardWidget
             size={item.size}
             data={item.data}
             onUpdateData={(patch) => updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), ...patch } })}
