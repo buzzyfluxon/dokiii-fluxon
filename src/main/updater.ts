@@ -32,8 +32,13 @@ let isBusy = false;
 let isDownloading = false;
 let pendingManual = false;
 let pendingVersion = '';
+let downloadRetryCount = 0;
 let startupTimeout: NodeJS.Timeout | null = null;
 let intervalHandle: NodeJS.Timeout | null = null;
+let downloadRetryTimeout: NodeJS.Timeout | null = null;
+
+const MAX_DOWNLOAD_RETRIES = 2;
+const DOWNLOAD_RETRY_DELAY_MS = 4000;
 
 function broadcast(status: UpdaterStatus) {
   currentStatus = status;
@@ -72,13 +77,15 @@ function attachAutoUpdaterListeners() {
 
   autoUpdater.on('error', (err) => {
     logUpdater(`error: ${err?.message || err}${err?.stack ? '\n' + err.stack : ''}`);
+    if (isDownloading) {
+      handleDownloadFailure(err);
+      return;
+    }
     isBusy = false;
-    const phase = isDownloading ? 'download' : 'check';
-    isDownloading = false;
     broadcast({
       status: 'error',
       message: err?.message || 'Something went wrong.',
-      phase,
+      phase: 'check',
       isManual: pendingManual,
     });
   });
@@ -95,7 +102,35 @@ function attachAutoUpdaterListeners() {
     logUpdater(`update-downloaded version=${info.version}`);
     isBusy = false;
     isDownloading = false;
+    downloadRetryCount = 0;
     broadcast({ status: 'downloaded', version: info.version });
+  });
+}
+
+function startDownload() {
+  isDownloading = true;
+  autoUpdater.downloadUpdate().catch((err) => {
+    logUpdater(`downloadUpdate rejected: ${err?.message || err}`);
+    handleDownloadFailure(err);
+  });
+}
+
+function handleDownloadFailure(err: any) {
+  if (downloadRetryCount < MAX_DOWNLOAD_RETRIES) {
+    downloadRetryCount += 1;
+    logUpdater(`retrying download attempt=${downloadRetryCount}`);
+    broadcast({ status: 'downloading', version: pendingVersion, percent: 0 });
+    downloadRetryTimeout = setTimeout(() => {
+      startDownload();
+    }, DOWNLOAD_RETRY_DELAY_MS);
+    return;
+  }
+  isDownloading = false;
+  broadcast({
+    status: 'error',
+    message: err?.message || 'Could not download the update.',
+    phase: 'download',
+    isManual: false,
   });
 }
 
@@ -132,6 +167,7 @@ export function initAutoUpdater(windowGetter: () => BrowserWindow | null) {
     });
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
+    autoUpdater.disableDifferentialDownload = true;
     autoUpdater.setFeedURL({
       provider: 'github',
       owner: 'buzzyfluxon',
@@ -147,16 +183,8 @@ export function initAutoUpdater(windowGetter: () => BrowserWindow | null) {
   ipcMain.handle('updater:download', () => {
     if (!packaged) return;
     if (currentStatus.status !== 'available' || isDownloading) return;
-    isDownloading = true;
-    autoUpdater.downloadUpdate().catch((err) => {
-      isDownloading = false;
-      broadcast({
-        status: 'error',
-        message: err?.message || 'Could not download the update.',
-        phase: 'download',
-        isManual: false,
-      });
-    });
+    downloadRetryCount = 0;
+    startDownload();
   });
 
   ipcMain.handle('updater:install', () => {
@@ -183,6 +211,8 @@ export function initAutoUpdater(windowGetter: () => BrowserWindow | null) {
 export function cleanupAutoUpdater() {
   if (startupTimeout) clearTimeout(startupTimeout);
   if (intervalHandle) clearInterval(intervalHandle);
+  if (downloadRetryTimeout) clearTimeout(downloadRetryTimeout);
   startupTimeout = null;
   intervalHandle = null;
+  downloadRetryTimeout = null;
 }

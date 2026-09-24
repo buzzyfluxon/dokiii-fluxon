@@ -754,7 +754,9 @@ export const DokiiiApp: React.FC = () => {
       case 'downloaded':
         return `DOKIII ${updater.version} is ready to install`;
       case 'error':
-        return updater.phase === 'download' ? "Couldn't download the update" : "Couldn't check for updates";
+        return updater.phase === 'download'
+          ? `Couldn't download the update: ${updater.message}`
+          : `Couldn't check for updates: ${updater.message}`;
       default:
         return 'Check for the latest version of DOKIII';
     }

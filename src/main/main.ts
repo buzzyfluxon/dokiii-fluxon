@@ -52,6 +52,7 @@ app.on('child-process-gone', (_e, details) => {
   logDebug('child-process-gone: ' + JSON.stringify(details));
 });
 app.on('before-quit', () => {
+  isQuitting = true;
   cleanupWallpaperWatcher();
   cleanupAutoUpdater();
   killAllPowerShell();
@@ -78,6 +79,7 @@ let mainWindow: BrowserWindow | null = null;
 let tray: any = null;
 let isModalOpen = false;
 let isPopoverOpen = false;
+let isQuitting = false;
 
 function getPackagedBuildDir(): string | null {
   if (!app.isPackaged) return null;
@@ -246,11 +248,19 @@ function createWindow() {
     updateWindowBounds();
   });
 
-  mainWindow.on('close', () => {
+  mainWindow.on('close', (event) => {
     logDebug('mainWindow on close');
     if (mainWindow) {
       const pos = mainWindow.getPosition();
       store.set('windowPosition', pos);
+    }
+    if (!isQuitting) {
+      event.preventDefault();
+      if (isModalOpen && mainWindow) {
+        mainWindow.webContents.send('dock:closeApp');
+      } else if (mainWindow) {
+        mainWindow.hide();
+      }
     }
   });
 

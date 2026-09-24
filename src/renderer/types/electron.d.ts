@@ -60,6 +60,7 @@ export interface ElectronAPI {
   onShowWidgetLibrary(callback: () => void): () => void;
   onShowSettings(callback: () => void): () => void;
   onShowApp(callback: () => void): () => void;
+  onCloseApp(callback: () => void): () => void;
   showUninstall(): Promise<void>;
   getScreenshotsDir(): Promise<string>;
   getWallpaperColors(): Promise<WallpaperPalette>;

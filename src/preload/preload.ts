@@ -59,6 +59,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('dock:showApp', handler);
     return () => ipcRenderer.removeListener('dock:showApp', handler);
   },
+  onCloseApp: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('dock:closeApp', handler);
+    return () => ipcRenderer.removeListener('dock:closeApp', handler);
+  },
   showUninstall: () => ipcRenderer.invoke('setup:showUninstall'),
   getScreenshotsDir: () => ipcRenderer.invoke('filesystem:getScreenshotsDir'),
   getWallpaperColors: () => ipcRenderer.invoke('wallpaper:getColors'),

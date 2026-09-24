@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const toggleWidgetLibrary = useConfigStore((s) => s.toggleWidgetLibrary);
   const toggleSettings = useConfigStore((s) => s.toggleSettings);
   const openDokiiiApp = useConfigStore((s) => s.openDokiiiApp);
+  const closeDokiiiApp = useConfigStore((s) => s.closeDokiiiApp);
   const closeOverlays = useConfigStore((s) => s.closeOverlays);
   const setUpdaterStatus = useUpdaterStore((s) => s.setUpdaterStatus);
   const hydrateUpdater = useUpdaterStore((s) => s.hydrate);
@@ -77,6 +78,9 @@ const App: React.FC = () => {
     const removeShowApp = window.electronAPI?.onShowApp?.(() => {
       openDokiiiApp('home');
     });
+    const removeCloseApp = window.electronAPI?.onCloseApp?.(() => {
+      closeDokiiiApp();
+    });
     const removeConfigChanged = window.electronAPI?.onDockConfigChanged((cfg) => {
       updateConfig(cfg);
     });
@@ -92,10 +96,11 @@ const App: React.FC = () => {
       removeShowLibrary?.();
       removeShowSettings?.();
       removeShowApp?.();
+      removeCloseApp?.();
       removeConfigChanged?.();
       removeUpdaterStatus?.();
     };
-  }, [toggleWidgetLibrary, toggleSettings, openDokiiiApp, updateConfig, hydrateUpdater, setUpdaterStatus]);
+  }, [toggleWidgetLibrary, toggleSettings, openDokiiiApp, closeDokiiiApp, updateConfig, hydrateUpdater, setUpdaterStatus]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
