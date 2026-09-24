@@ -30,3 +30,8 @@ nsis:
   artifactName: DOKIII-Setup.exe
   uninstallDisplayName: DOKIII
   differentialPackage: true
+  # Hard-kills a running DOKIII and removes autostart entries on uninstall.
+  include: scripts/installer.nsh
+  # Removes %APPDATA%\dokiii (saved widgets/settings) on uninstall. The stock
+  # uninstaller skips this automatically during updates.
+  deleteAppDataOnUninstall: true

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, screen, ipcMain, nativeImage, NativeImage, shell } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { execFile } from 'child_process';
+import { spawn } from 'child_process';
 import Store from 'electron-store';
 import { registerSystemHandlers } from './ipc/system';
 import { registerFilesystemHandlers } from './ipc/filesystem';
@@ -162,13 +162,56 @@ function findUninstallerExe(): string | null {
   return null;
 }
 
+function openWindowsAppSettings(): void {
+  shell.openExternal('ms-settings:appsfeatures');
+}
+
+// Fully stops the app so nothing (dock, desktop widgets, tray icon, helper
+// processes) is left running while the uninstaller deletes files. Uses
+// app.exit() instead of app.quit(): quit() is a polite request that goes
+// through the window 'close' handler and can be blocked or delayed.
+function shutdownForUninstall(): void {
+  isQuitting = true;
+  logDebug('shutting down for uninstall');
+  try {
+    cleanupWallpaperWatcher();
+    cleanupAutoUpdater();
+    killAllPowerShell();
+  } catch {}
+  try {
+    tray?.destroy();
+    tray = null;
+  } catch {}
+  try {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy();
+  } catch {}
+  app.exit(0);
+}
+
 function launchUninstaller(): void {
   const uninstallerExe = findUninstallerExe();
-  if (uninstallerExe) {
-    execFile(uninstallerExe);
-    app.quit();
-  } else {
-    shell.openExternal('ms-settings:appsfeatures');
+  if (!uninstallerExe) {
+    openWindowsAppSettings();
+    return;
+  }
+
+  try {
+    // Detached + no stdio so the uninstaller is independent of this process
+    // and keeps running after DOKIII exits.
+    const child = spawn(uninstallerExe, [], { detached: true, stdio: 'ignore' });
+    child.once('error', (err) => {
+      logDebug('failed to start uninstaller: ' + (err?.stack || err));
+      openWindowsAppSettings();
+    });
+    // Only close the app once the uninstaller has really started, so a failed
+    // launch never leaves the user with a dead app and no uninstaller.
+    child.once('spawn', () => {
+      child.unref();
+      shutdownForUninstall();
+    });
+  } catch (err: any) {
+    logDebug('failed to start uninstaller: ' + (err?.stack || err));
+    openWindowsAppSettings();
   }
 }
 
