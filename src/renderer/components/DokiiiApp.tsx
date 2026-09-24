@@ -46,9 +46,6 @@ export const DokiiiApp: React.FC = () => {
   const [newProfileName, setNewProfileName] = useState('');
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [editNameInput, setEditNameInput] = useState('');
-  // Opens as a true full, maximized window by default (rather than the
-  // small floating panel) since the desktop dock/widgets/Halo are now
-  // hidden while this is open — there's no reason to show a partial view.
   const [isMaximized, setIsMaximized] = useState(true);
   const [sysMetrics, setSysMetrics] = useState<{ cpu: number | null; ram: number | null; ssd: number | null }>({
     cpu: null,
@@ -186,19 +183,6 @@ export const DokiiiApp: React.FC = () => {
           <div
             className={`dokiii-toggle ${dock.autoHide ? 'active' : ''}`}
             onClick={() => updateConfig({ autoHide: !dock.autoHide })}
-          >
-            <div className="dokiii-toggle-handle" />
-          </div>
-        </div>
-
-        <div className="dokiii-row">
-          <div className="dokiii-row-label">
-            <span className="dokiii-row-name">Dynamic Island</span>
-            <span className="dokiii-row-desc">Top status bar alert pill for system events and media</span>
-          </div>
-          <div
-            className={`dokiii-toggle ${dock.dynamicIslandEnabled ? 'active' : ''}`}
-            onClick={() => updateConfig({ dynamicIslandEnabled: !dock.dynamicIslandEnabled })}
           >
             <div className="dokiii-toggle-handle" />
           </div>
@@ -860,28 +844,6 @@ export const DokiiiApp: React.FC = () => {
       </div>
 
       <div className="dokiii-card">
-        <span className="dokiii-card-title">Shortcuts & Keybindings</span>
-        <div className="dokiii-row">
-          <div className="dokiii-row-label">
-            <span className="dokiii-row-name">File Search</span>
-            <span className="dokiii-row-desc">Open instant macOS Spotlight search</span>
-          </div>
-          <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '6px' }}>
-            Alt + Space
-          </span>
-        </div>
-        <div className="dokiii-row">
-          <div className="dokiii-row-label">
-            <span className="dokiii-row-name">Command Palette</span>
-            <span className="dokiii-row-desc">Trigger quick actions and commands</span>
-          </div>
-          <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '6px' }}>
-            Ctrl + Space
-          </span>
-        </div>
-      </div>
-
-      <div className="dokiii-card">
         <span className="dokiii-card-title">Updates</span>
         <div className="dokiii-row">
           <div className="dokiii-row-label">
@@ -1033,8 +995,6 @@ export const DokiiiApp: React.FC = () => {
         return renderDockTab();
       case 'halo':
         return renderHaloTab();
-      case 'island':
-        return renderHaloTab();
       case 'settings':
         return renderSettingsTab();
       case 'about':
@@ -1124,8 +1084,7 @@ export const DokiiiApp: React.FC = () => {
                 {activeAppTab === 'desktop' && 'Desktop widget positioning and sizing'}
                 {activeAppTab === 'dock' && 'Customize dock magnification, style, and behavior'}
                 {activeAppTab === 'halo' && 'Configure the DOKIII Halo top-center dynamic desktop overlay'}
-                {activeAppTab === 'island' && 'Dynamic status pill configuration (Under Development)'}
-                {activeAppTab === 'settings' && 'System options, startup, and shortcuts'}
+                {activeAppTab === 'settings' && 'System options and startup'}
                 {activeAppTab === 'about' && 'DOKIII Information and Build Details'}
               </span>
             </div>

@@ -10,6 +10,7 @@ import { DesktopWidgetsLayer } from './components/desktop-widgets/DesktopWidgets
 import { DokiiiApp } from './components/DokiiiApp';
 import Halo from './components/halo/Halo';
 import UpdateNotification from './components/updater/UpdateNotification';
+import Notice from './components/Notice';
 import './styles/global.css';
 import './styles/dock.css';
 import './styles/widgets.css';
@@ -134,9 +135,6 @@ const App: React.FC = () => {
         style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}
         onClick={handleContainerClick}
       >
-        {/* While the DOKIII app (Home/Settings-style full app) is open, it
-            should be the only thing on screen — the desktop dock, desktop
-            widgets, and Halo must not render underneath it. */}
         {!isDokiiiAppOpen && <Halo />}
         {!isDokiiiAppOpen && <DesktopWidgetsLayer />}
         {!isDokiiiAppOpen && <Dock />}
@@ -144,6 +142,7 @@ const App: React.FC = () => {
         {isSettingsOpen && <Settings />}
         {isDokiiiAppOpen && <DokiiiApp />}
         <UpdateNotification />
+        <Notice />
       </div>
     </PopoverContext.Provider>
   );

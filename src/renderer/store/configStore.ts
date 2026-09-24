@@ -11,6 +11,7 @@ import {
   DEFAULT_DESKTOP_WIDGETS,
 } from '../../shared/constants';
 import { useWidgetStore } from './widgetStore';
+import { findFreeSpot, getDockReservedRect } from '../utils/widgetPlacement';
 
 export type DokiiiAppTab =
   | 'home'
@@ -19,7 +20,6 @@ export type DokiiiAppTab =
   | 'desktop'
   | 'dock'
   | 'halo'
-  | 'island'
   | 'settings'
   | 'about';
 
@@ -31,6 +31,7 @@ interface ConfigState {
   isSettingsOpen: boolean;
   isDokiiiAppOpen: boolean;
   activeAppTab: DokiiiAppTab;
+  notice: string | null;
   initialized: boolean;
   updateConfig: (partial: Partial<DockConfig>) => void;
   toggleWidgetLibrary: () => void;
@@ -40,10 +41,11 @@ interface ConfigState {
   toggleDokiiiApp: (tab?: DokiiiAppTab) => void;
   setActiveAppTab: (tab: DokiiiAppTab) => void;
   closeOverlays: () => void;
+  showNotice: (message: string) => void;
   addPinnedApp: (app: DockAppItem) => void;
   removePinnedApp: (id: string) => void;
   reorderPinnedApps: (apps: DockAppItem[]) => void;
-  addDesktopWidget: (type: DesktopWidgetType, size?: DesktopWidgetSize) => void;
+  addDesktopWidget: (type: DesktopWidgetType, size?: DesktopWidgetSize) => boolean;
   removeDesktopWidget: (id: string) => void;
   updateDesktopWidgetPos: (id: string, x: number, y: number) => void;
   setDesktopWidgetSize: (id: string, size: DesktopWidgetSize) => void;
@@ -58,6 +60,8 @@ interface ConfigState {
   init: () => Promise<void>;
 }
 
+let noticeTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const useConfigStore = create<ConfigState>((set, get) => ({
   dock: { ...DEFAULT_DOCK_CONFIG },
   profiles: [...DEFAULT_PROFILES],
@@ -66,6 +70,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   isSettingsOpen: false,
   isDokiiiAppOpen: false,
   activeAppTab: 'home',
+  notice: null,
   initialized: false,
   updateConfig: (partial) => {
     const newDock = { ...get().dock, ...partial };
@@ -123,6 +128,14 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   setActiveAppTab: (tab) => set({ activeAppTab: tab }),
   closeOverlays: () =>
     set({ isWidgetLibraryOpen: false, isSettingsOpen: false, isDokiiiAppOpen: false }),
+  showNotice: (message) => {
+    if (noticeTimer) clearTimeout(noticeTimer);
+    set({ notice: message });
+    noticeTimer = setTimeout(() => {
+      set({ notice: null });
+      noticeTimer = null;
+    }, 3500);
+  },
   addPinnedApp: (newApp) => {
     const current = get().dock.pinnedApps || [];
     if (current.some((a) => a.id === newApp.id || (a.path === newApp.path && newApp.path !== ''))) {
@@ -140,17 +153,27 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     get().updateConfig({ pinnedApps: apps });
   },
   addDesktopWidget: (type, size = 'small') => {
-    const current = get().dock.desktopWidgets || [];
-    const id = `desk-${type}-${Date.now()}`;
+    const { dock } = get();
+    const current = dock.desktopWidgets || [];
+    const winW = window.innerWidth || 1920;
+    const winH = window.innerHeight || 1080;
+    const reserved = dock.autoHide
+      ? null
+      : getDockReservedRect(dock.position || 'bottom', dock.size || 64, winW, winH);
+    const spot = findFreeSpot(current, size, winW, winH, reserved);
+    if (!spot) {
+      get().showNotice("No space left on the desktop. This widget can't be added.");
+      return false;
+    }
     const newItem: DesktopWidgetItem = {
-      id,
+      id: `desk-${type}-${Date.now()}`,
       type,
-      x: 60 + (current.length % 3) * 170,
-      y: 60 + Math.floor(current.length / 3) * 170,
+      x: spot.x,
+      y: spot.y,
       size,
     };
-    const updated = [...current, newItem];
-    get().updateConfig({ desktopWidgets: updated });
+    get().updateConfig({ desktopWidgets: [...current, newItem] });
+    return true;
   },
   removeDesktopWidget: (id) => {
     const current = get().dock.desktopWidgets || [];

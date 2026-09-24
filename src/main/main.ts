@@ -166,10 +166,6 @@ function openWindowsAppSettings(): void {
   shell.openExternal('ms-settings:appsfeatures');
 }
 
-// Fully stops the app so nothing (dock, desktop widgets, tray icon, helper
-// processes) is left running while the uninstaller deletes files. Uses
-// app.exit() instead of app.quit(): quit() is a polite request that goes
-// through the window 'close' handler and can be blocked or delayed.
 function shutdownForUninstall(): void {
   isQuitting = true;
   logDebug('shutting down for uninstall');
@@ -196,15 +192,11 @@ function launchUninstaller(): void {
   }
 
   try {
-    // Detached + no stdio so the uninstaller is independent of this process
-    // and keeps running after DOKIII exits.
     const child = spawn(uninstallerExe, [], { detached: true, stdio: 'ignore' });
     child.once('error', (err) => {
       logDebug('failed to start uninstaller: ' + (err?.stack || err));
       openWindowsAppSettings();
     });
-    // Only close the app once the uninstaller has really started, so a failed
-    // launch never leaves the user with a dead app and no uninstaller.
     child.once('spawn', () => {
       child.unref();
       shutdownForUninstall();
@@ -420,11 +412,6 @@ if (!gotSingleInstanceLock) {
 } else {
   const launchedAtStartup = process.argv.includes('--startup');
   const appLaunchTime = Date.now();
-  // Guards against any leftover/duplicate autostart entry (e.g. from an
-  // older install) still launching a second process right at boot: a
-  // second-instance signal arriving within this window of a --startup
-  // launch is treated as a stray duplicate launch, not a real user request
-  // to open the app, so it won't pop the Home screen open on reboot.
   const STARTUP_GRACE_MS = 8000;
 
   app.on('second-instance', () => {

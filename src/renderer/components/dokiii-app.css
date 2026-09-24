@@ -46,8 +46,6 @@
 }
 
 .dokiii-window.is-maximized {
-  /* True fullscreen: fills the entire window with no gaps, no rounded
-     corners and no border, so nothing behind it is visible at all. */
   width: 100vw;
   height: 100vh;
   max-width: none;

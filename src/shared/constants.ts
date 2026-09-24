@@ -61,6 +61,12 @@ export type DesktopWidgetType =
 
 export type DesktopWidgetSize = 'small' | 'medium' | 'large';
 
+export const DESKTOP_WIDGET_SIZES: Record<DesktopWidgetSize, { width: number; height: number }> = {
+  small: { width: 144, height: 144 },
+  medium: { width: 304, height: 144 },
+  large: { width: 304, height: 304 },
+};
+
 export interface DesktopWidgetItem {
   id: string;
   type: DesktopWidgetType;
@@ -220,7 +226,6 @@ export const DEFAULT_DOCK_CONFIG = {
   desktopWidgets: DEFAULT_DESKTOP_WIDGETS,
   desktopWidgetsVisible: true,
   activeProfileId: 'default',
-  dynamicIslandEnabled: false,
   liquidGlassEnabled: false,
   halo: {
     enabled: true,

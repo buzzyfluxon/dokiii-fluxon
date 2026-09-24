@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useConfigStore } from '../../store/configStore';
 import { useLiquidGlassStore } from '../../store/liquidGlassStore';
-import { DesktopWidgetItem, DesktopWidgetSize, DEFAULT_DESKTOP_WIDGETS } from '../../../shared/constants';
+import {
+  DesktopWidgetItem,
+  DesktopWidgetSize,
+  DEFAULT_DESKTOP_WIDGETS,
+  DESKTOP_WIDGET_SIZES,
+} from '../../../shared/constants';
 import { WorldClockWidget } from './WorldClockWidget';
 import { DateDayWidget } from './DateDayWidget';
 import { SystemControlsWidget } from './SystemControlsWidget';
@@ -24,9 +29,9 @@ import { MoodBoardWidget } from './MoodBoardWidget';
 import './desktop-widgets.css';
 
 const BASE_SIZE: Record<DesktopWidgetSize, { width: number; height: number; padding: number }> = {
-  small: { width: 144, height: 144, padding: 14 },
-  medium: { width: 304, height: 144, padding: 16 },
-  large: { width: 304, height: 304, padding: 18 },
+  small: { ...DESKTOP_WIDGET_SIZES.small, padding: 14 },
+  medium: { ...DESKTOP_WIDGET_SIZES.medium, padding: 16 },
+  large: { ...DESKTOP_WIDGET_SIZES.large, padding: 18 },
 };
 
 const MIN_WIDGET_WIDTH = 100;
