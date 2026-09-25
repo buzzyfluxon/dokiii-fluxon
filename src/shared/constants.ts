@@ -223,6 +223,10 @@ export const DEFAULT_DOCK_CONFIG = {
   desktopWidgetsVisible: true,
   activeProfileId: 'default',
   liquidGlassEnabled: false,
+  musicAmbient: {
+    enabled: false,
+    intensity: 'medium' as 'low' | 'medium' | 'high',
+  },
   halo: {
     enabled: true,
     displayMode: 'always' as 'always' | 'active',
@@ -232,6 +236,16 @@ export const DEFAULT_DOCK_CONFIG = {
     showDownloads: true,
     showScreenshots: true,
   },
+};
+
+export interface MusicAmbientConfig {
+  enabled: boolean;
+  intensity: 'low' | 'medium' | 'high';
+}
+
+export const DEFAULT_MUSIC_AMBIENT_CONFIG: MusicAmbientConfig = {
+  enabled: false,
+  intensity: 'medium',
 };
 
 export interface HaloConfig {

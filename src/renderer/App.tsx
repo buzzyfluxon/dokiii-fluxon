@@ -9,6 +9,7 @@ import Settings from './components/Settings';
 import { DesktopWidgetsLayer } from './components/desktop-widgets/DesktopWidgetsLayer';
 import { DokiiiApp } from './components/DokiiiApp';
 import Halo from './components/halo/Halo';
+import MusicAmbient from './components/ambient/MusicAmbient';
 import UpdateNotification from './components/updater/UpdateNotification';
 import Notice from './components/Notice';
 import './styles/global.css';
@@ -147,6 +148,7 @@ const App: React.FC = () => {
       >
         {!isDokiiiAppOpen && <Halo />}
         {!isDokiiiAppOpen && <DesktopWidgetsLayer />}
+        {!isDokiiiAppOpen && <MusicAmbient />}
         {!isDokiiiAppOpen && <Dock />}
         {isWidgetLibraryOpen && <WidgetLibrary />}
         {isSettingsOpen && <Settings />}

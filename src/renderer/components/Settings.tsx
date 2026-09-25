@@ -285,6 +285,58 @@ export const Settings: React.FC = () => {
             </div>
 
             <div className="settings-section">
+              <div className="settings-section-title">Music Ambient</div>
+
+              <div className="setting-row">
+                <div>
+                  <div className="setting-label">Music Ambient</div>
+                  <div className="setting-desc">Soft, drifting gradients around the Dock, tinted by the current album artwork</div>
+                </div>
+                <button
+                  className={`setting-toggle${dock.musicAmbient?.enabled ? ' on' : ''}`}
+                  onClick={() => {
+                    const musicAmbient = dock.musicAmbient || { enabled: false, intensity: 'medium' as const };
+                    updateConfig({ musicAmbient: { ...musicAmbient, enabled: !musicAmbient.enabled } });
+                  }}
+                />
+              </div>
+
+              {dock.musicAmbient?.enabled && (
+                <div className="setting-row">
+                  <div>
+                    <div className="setting-label">Ambient Intensity</div>
+                    <div className="setting-desc">How strong the glow and drift feel</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.06)', padding: '3px', borderRadius: '10px' }}>
+                    {(['low', 'medium', 'high'] as const).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => {
+                          const musicAmbient = dock.musicAmbient || { enabled: true, intensity: 'medium' as const };
+                          updateConfig({ musicAmbient: { ...musicAmbient, intensity: level } });
+                        }}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '7px',
+                          border: 'none',
+                          background: (dock.musicAmbient?.intensity || 'medium') === level ? '#0A84FF' : 'transparent',
+                          color: (dock.musicAmbient?.intensity || 'medium') === level ? '#ffffff' : 'rgba(255,255,255,0.6)',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          textTransform: 'capitalize',
+                          cursor: 'pointer',
+                          transition: 'all 160ms ease',
+                        }}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="settings-section">
               <div className="settings-section-title">DOKIII Halo</div>
 
               <div className="setting-row">
