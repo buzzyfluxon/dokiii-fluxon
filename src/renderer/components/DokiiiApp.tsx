@@ -187,6 +187,19 @@ export const DokiiiApp: React.FC = () => {
             <div className="dokiii-toggle-handle" />
           </div>
         </div>
+
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Show Dock on Hover</span>
+            <span className="dokiii-row-desc">Reveal the dock whenever the cursor is near it</span>
+          </div>
+          <div
+            className={`dokiii-toggle ${dock.showOnHover ? 'active' : ''}`}
+            onClick={() => updateConfig({ showOnHover: !dock.showOnHover })}
+          >
+            <div className="dokiii-toggle-handle" />
+          </div>
+        </div>
       </div>
 
       <div className="dokiii-card">
@@ -776,50 +789,12 @@ export const DokiiiApp: React.FC = () => {
 
         <div className="dokiii-row">
           <div className="dokiii-row-label">
-            <span className="dokiii-row-name">Launch at Startup</span>
-            <span className="dokiii-row-desc">Automatically launch DOKIII when logging into Windows</span>
-          </div>
-          <div
-            className={`dokiii-toggle ${dock.launchAtStartup ? 'active' : ''}`}
-            onClick={async () => {
-              const next = !dock.launchAtStartup;
-              updateConfig({ launchAtStartup: next });
-              try {
-                window.electronAPI?.setLaunchAtStartup(next);
-              } catch (_) {}
-            }}
-          >
-            <div className="dokiii-toggle-handle" />
-          </div>
-        </div>
-
-        <div className="dokiii-row">
-          <div className="dokiii-row-label">
             <span className="dokiii-row-name">Running App Indicators</span>
             <span className="dokiii-row-desc">Display glowing dot beneath currently open applications</span>
           </div>
           <div
             className={`dokiii-toggle ${dock.showIndicators ? 'active' : ''}`}
             onClick={() => updateConfig({ showIndicators: !dock.showIndicators })}
-          >
-            <div className="dokiii-toggle-handle" />
-          </div>
-        </div>
-
-        <div className="dokiii-row">
-          <div className="dokiii-row-label">
-            <span className="dokiii-row-name">Always On Top</span>
-            <span className="dokiii-row-desc">Float dock above all fullscreen windows</span>
-          </div>
-          <div
-            className={`dokiii-toggle ${dock.alwaysOnTop ? 'active' : ''}`}
-            onClick={() => {
-              const next = !dock.alwaysOnTop;
-              updateConfig({ alwaysOnTop: next });
-              try {
-                window.electronAPI?.setAlwaysOnTop(next);
-              } catch (_) {}
-            }}
           >
             <div className="dokiii-toggle-handle" />
           </div>
@@ -1084,7 +1059,7 @@ export const DokiiiApp: React.FC = () => {
                 {activeAppTab === 'desktop' && 'Desktop widget positioning and sizing'}
                 {activeAppTab === 'dock' && 'Customize dock magnification, style, and behavior'}
                 {activeAppTab === 'halo' && 'Configure the DOKIII Halo top-center dynamic desktop overlay'}
-                {activeAppTab === 'settings' && 'System options and startup'}
+                {activeAppTab === 'settings' && 'System options'}
                 {activeAppTab === 'about' && 'DOKIII Information and Build Details'}
               </span>
             </div>

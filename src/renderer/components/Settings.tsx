@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useConfigStore } from '../store/configStore';
 import { useLiquidGlassStore } from '../store/liquidGlassStore';
 import { IconClose, IconPlus, IconTrash, IconMinus, IconMaximize, IconRestore } from './Icons';
@@ -10,19 +10,22 @@ export const Settings: React.FC = () => {
   const { dock, updateConfig, toggleSettings, removePinnedApp } = useConfigStore();
   const [isAddAppOpen, setIsAddAppOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [displays, setDisplays] = useState<{ index: number; id: number; isPrimary: boolean; width: number; height: number }[]>([]);
+
+  useEffect(() => {
+    window.electronAPI?.getDisplays().then((list) => setDisplays(list || []));
+  }, []);
+
+  const handleMonitor = (index: number) => {
+    updateConfig({ defaultMonitor: index });
+  };
 
   const handleToggle = (key: keyof typeof dock) => {
     const current = dock[key];
     if (typeof current === 'boolean') {
       updateConfig({ [key]: !current } as any);
-      if (key === 'alwaysOnTop') {
-        window.electronAPI?.setAlwaysOnTop(!current);
-      }
       if (key === 'autoHide') {
         window.electronAPI?.setAutoHide(!current);
-      }
-      if (key === 'launchAtStartup') {
-        window.electronAPI?.setLaunchAtStartup(!current);
       }
     }
   };
@@ -33,10 +36,6 @@ export const Settings: React.FC = () => {
 
   const handlePosition = (pos: 'bottom' | 'left' | 'right') => {
     updateConfig({ position: pos });
-  };
-
-  const handleMinimizeEffect = (effect: 'genie' | 'scale') => {
-    updateConfig({ minimizeEffect: effect });
   };
 
   const pinnedApps = dock.pinnedApps || [];
@@ -162,6 +161,36 @@ export const Settings: React.FC = () => {
             <div className="settings-section">
               <div className="settings-section-title">Position on screen</div>
 
+              {displays.length > 1 && (
+                <div className="setting-row">
+                  <div>
+                    <div className="setting-label">Display</div>
+                    <div className="setting-desc">Choose which monitor the Dock and widgets appear on</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.06)', padding: '3px', borderRadius: '10px' }}>
+                    {displays.map((display) => (
+                      <button
+                        key={display.id}
+                        onClick={() => handleMonitor(display.index)}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '7px',
+                          border: 'none',
+                          background: (dock.defaultMonitor || 0) === display.index ? '#0A84FF' : 'transparent',
+                          color: (dock.defaultMonitor || 0) === display.index ? '#ffffff' : 'rgba(255,255,255,0.6)',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 160ms ease',
+                        }}
+                      >
+                        {display.isPrimary ? `Display ${display.index + 1} (Main)` : `Display ${display.index + 1}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="setting-row">
                 <div>
                   <div className="setting-label">Screen Position</div>
@@ -197,51 +226,23 @@ export const Settings: React.FC = () => {
 
               <div className="setting-row">
                 <div>
-                  <div className="setting-label">Minimize windows using</div>
-                  <div className="setting-desc">Visual transition effect when minimizing</div>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.06)', padding: '3px', borderRadius: '10px' }}>
-                  {(['genie', 'scale'] as const).map((eff) => (
-                    <button
-                      key={eff}
-                      onClick={() => handleMinimizeEffect(eff)}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: '7px',
-                        border: 'none',
-                        background: (dock.minimizeEffect || 'genie') === eff ? '#0A84FF' : 'transparent',
-                        color: (dock.minimizeEffect || 'genie') === eff ? '#ffffff' : 'rgba(255,255,255,0.6)',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 160ms ease',
-                      }}
-                    >
-                      {eff === 'genie' ? 'Genie effect' : 'Scale effect'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="setting-row">
-                <div>
-                  <div className="setting-label">Minimize windows into application icon</div>
-                  <div className="setting-desc">Windows minimize directly into their Dock icon</div>
-                </div>
-                <button
-                  className={`setting-toggle${dock.minimizeToIcon !== false ? ' on' : ''}`}
-                  onClick={() => handleToggle('minimizeToIcon')}
-                />
-              </div>
-
-              <div className="setting-row">
-                <div>
                   <div className="setting-label">Automatically hide and show the Dock</div>
                   <div className="setting-desc">Reveal the Dock only when pointer moves to screen edge</div>
                 </div>
                 <button
                   className={`setting-toggle${dock.autoHide ? ' on' : ''}`}
                   onClick={() => handleToggle('autoHide')}
+                />
+              </div>
+
+              <div className="setting-row">
+                <div>
+                  <div className="setting-label">Show Dock on hover</div>
+                  <div className="setting-desc">Reveal the Dock whenever the pointer is near it, without waiting for auto-hide</div>
+                </div>
+                <button
+                  className={`setting-toggle${dock.showOnHover ? ' on' : ''}`}
+                  onClick={() => handleToggle('showOnHover')}
                 />
               </div>
 
@@ -264,28 +265,6 @@ export const Settings: React.FC = () => {
                 <button
                   className={`setting-toggle${dock.showIndicators !== false ? ' on' : ''}`}
                   onClick={() => handleToggle('showIndicators')}
-                />
-              </div>
-
-              <div className="setting-row">
-                <div>
-                  <div className="setting-label">Always On Top</div>
-                  <div className="setting-desc">Keep above other desktop windows</div>
-                </div>
-                <button
-                  className={`setting-toggle${dock.alwaysOnTop ? ' on' : ''}`}
-                  onClick={() => handleToggle('alwaysOnTop')}
-                />
-              </div>
-
-              <div className="setting-row">
-                <div>
-                  <div className="setting-label">Start with Windows</div>
-                  <div className="setting-desc">Launch DOKIII automatically when computer boots</div>
-                </div>
-                <button
-                  className={`setting-toggle${dock.launchAtStartup ? ' on' : ''}`}
-                  onClick={() => handleToggle('launchAtStartup')}
                 />
               </div>
             </div>

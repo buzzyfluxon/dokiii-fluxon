@@ -44,7 +44,7 @@ function getTrayIcon(): NativeImage {
   return nativeImage.createFromDataURL(DOKIII_ICON_DATA_URL).resize({ width: 24, height: 24 });
 }
 
-export function createTray(mainWindow: BrowserWindow): Tray | null {
+export function createTray(mainWindow: BrowserWindow, getAutoHide: () => boolean): Tray | null {
   if (trayInstance) {
     return trayInstance;
   }
@@ -54,96 +54,81 @@ export function createTray(mainWindow: BrowserWindow): Tray | null {
     trayInstance = new Tray(icon);
     trayInstance.setToolTip('DOKIII');
 
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Open DOKIII App',
-      click: () => {
-        mainWindow.setSkipTaskbar(false);
+    const toggleDock = () => {
+      if (!mainWindow.isVisible()) {
         mainWindow.show();
-        mainWindow.setAlwaysOnTop(true);
-        mainWindow.moveTop();
         mainWindow.focus();
-        mainWindow.webContents.send('dock:showApp');
-      },
-    },
-    { type: 'separator' },
-    {
-      label: 'Show / Hide Dock',
-      click: () => {
-        if (mainWindow.isVisible()) mainWindow.hide();
-        else {
-          mainWindow.show();
-          mainWindow.focus();
-        }
-      },
-    },
-    {
-      label: 'Widget Library',
-      click: () => {
-        mainWindow.show();
-        mainWindow.webContents.send('dock:showWidgetLibrary');
-      },
-    },
-    {
-      label: 'Settings',
-      click: () => {
-        mainWindow.show();
-        mainWindow.webContents.send('dock:showSettings');
-      },
-    },
-    { type: 'separator' },
-    {
-      label: 'Auto Hide',
-      type: 'checkbox',
-      click: (menuItem) => {
-        mainWindow.webContents.send('dock:configChanged', { autoHide: menuItem.checked });
-      },
-    },
-    {
-      label: 'Always On Top',
-      type: 'checkbox',
-      checked: false,
-      click: (menuItem) => {
-        mainWindow.setAlwaysOnTop(menuItem.checked);
-      },
-    },
-    {
-      label: 'Start with Windows',
-      type: 'checkbox',
-      click: (menuItem) => {
-        app.setLoginItemSettings({ openAtLogin: menuItem.checked });
-      },
-    },
-    { type: 'separator' },
-    {
-      label: 'Uninstall DOKIII',
-      click: () => {
-        ipcMain.emit('show-uninstall');
-      },
-    },
-    {
-      label: 'Quit DOKIII',
-      click: () => app.quit(),
-    },
-  ]);
+        return;
+      }
+      mainWindow.webContents.send('dock:toggleVisibility');
+    };
 
-  trayInstance.setContextMenu(contextMenu);
+    const buildMenu = () =>
+      Menu.buildFromTemplate([
+        {
+          label: 'Open DOKIII App',
+          click: () => {
+            mainWindow.setSkipTaskbar(false);
+            mainWindow.show();
+            mainWindow.setAlwaysOnTop(true);
+            mainWindow.moveTop();
+            mainWindow.focus();
+            mainWindow.webContents.send('dock:showApp');
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Show / Hide Dock',
+          click: toggleDock,
+        },
+        {
+          label: 'Widget Library',
+          click: () => {
+            mainWindow.show();
+            mainWindow.webContents.send('dock:showWidgetLibrary');
+          },
+        },
+        {
+          label: 'Settings',
+          click: () => {
+            mainWindow.show();
+            mainWindow.webContents.send('dock:showSettings');
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Auto Hide',
+          type: 'checkbox',
+          checked: getAutoHide(),
+          click: (menuItem) => {
+            mainWindow.webContents.send('dock:configChanged', { autoHide: menuItem.checked });
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Uninstall DOKIII',
+          click: () => {
+            ipcMain.emit('show-uninstall');
+          },
+        },
+        {
+          label: 'Quit DOKIII',
+          click: () => app.quit(),
+        },
+      ]);
 
-  trayInstance.on('click', () => {
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-    } else {
+    trayInstance.on('right-click', () => {
+      trayInstance?.popUpContextMenu(buildMenu());
+    });
+
+    trayInstance.on('click', toggleDock);
+
+    trayInstance.on('double-click', () => {
       mainWindow.show();
       mainWindow.focus();
-    }
-  });
+    });
 
-  trayInstance.on('double-click', () => {
-    mainWindow.show();
-    mainWindow.focus();
-  });
-
-  return trayInstance;
+    return trayInstance;
   } catch {
     return null;
   }

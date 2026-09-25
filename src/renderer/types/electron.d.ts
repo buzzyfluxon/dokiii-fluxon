@@ -45,10 +45,8 @@ export interface ElectronAPI {
       activeProfileId: string;
     }>
   ): Promise<void>;
-  setAlwaysOnTop(value: boolean): Promise<void>;
   setAutoHide(value: boolean): Promise<void>;
-  setLaunchAtStartup(value: boolean): Promise<void>;
-  getLaunchAtStartup(): Promise<boolean>;
+  getDisplays(): Promise<{ index: number; id: number; isPrimary: boolean; width: number; height: number }[]>;
   showWidgetLibrary(): Promise<void>;
   showSettings(): Promise<void>;
   setModalOpen(isOpen: boolean): Promise<void>;
@@ -61,6 +59,7 @@ export interface ElectronAPI {
   onShowSettings(callback: () => void): () => void;
   onShowApp(callback: () => void): () => void;
   onCloseApp(callback: () => void): () => void;
+  onToggleDock(callback: () => void): () => void;
   showUninstall(): Promise<void>;
   getScreenshotsDir(): Promise<string>;
   getWallpaperColors(): Promise<WallpaperPalette>;

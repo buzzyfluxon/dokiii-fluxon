@@ -8,7 +8,6 @@ import { registerFilesystemHandlers } from './ipc/filesystem';
 import { registerMediaHandlers } from './ipc/media';
 import { registerProcessHandlers } from './ipc/process';
 import { registerScreenshotHandlers } from './ipc/screenshot';
-import { registerStartupHandlers } from './ipc/startup';
 import { registerWallpaperHandlers, cleanupWallpaperWatcher } from './ipc/wallpaper';
 import { initAutoUpdater, cleanupAutoUpdater } from './updater';
 import { killAllPowerShell } from './utils/powershell';
@@ -220,7 +219,6 @@ function createWindow() {
     height: initialBounds.height,
     frame: false,
     transparent: true,
-    alwaysOnTop: store.get('dock.alwaysOnTop', false) as boolean,
     skipTaskbar: true,
     resizable: false,
     hasShadow: false,
@@ -269,7 +267,7 @@ function createWindow() {
     }
   });
 
-  tray = createTray(mainWindow);
+  tray = createTray(mainWindow, () => Boolean(store.get('dock.autoHide', false)));
 
   ipcMain.on('app:ready', () => {
     logDebug('app:ready received');
@@ -312,6 +310,18 @@ function registerSetupHandlers() {
 }
 
 function registerConfigHandlers() {
+  ipcMain.handle('window:getDisplays', () => {
+    const displays = screen.getAllDisplays();
+    const primaryId = screen.getPrimaryDisplay().id;
+    return displays.map((display, index) => ({
+      index,
+      id: display.id,
+      isPrimary: display.id === primaryId,
+      width: display.bounds.width,
+      height: display.bounds.height,
+    }));
+  });
+
   ipcMain.handle('config:get', () => {
     return {
       dock: store.get('dock'),
@@ -329,13 +339,6 @@ function registerConfigHandlers() {
     }
     if (config.dock && config.dock.defaultMonitor !== undefined) {
       updateWindowBounds();
-    }
-  });
-
-  ipcMain.handle('window:setAlwaysOnTop', (_, value: boolean) => {
-    if (mainWindow) {
-      mainWindow.setAlwaysOnTop(value);
-      store.set('dock.alwaysOnTop', value);
     }
   });
 
@@ -359,8 +362,7 @@ function registerConfigHandlers() {
       } else {
         mainWindow.setSkipTaskbar(true);
         mainWindow.setIgnoreMouseEvents(true, { forward: true });
-        const alwaysOnTop = store.get('dock.alwaysOnTop', false) as boolean;
-        mainWindow.setAlwaysOnTop(alwaysOnTop);
+        mainWindow.setAlwaysOnTop(false);
       }
     }
   });
@@ -437,7 +439,6 @@ if (!gotSingleInstanceLock) {
     registerMediaHandlers();
     registerProcessHandlers();
     registerScreenshotHandlers();
-    registerStartupHandlers();
     registerConfigHandlers();
     registerSetupHandlers();
     registerWallpaperHandlers(() => mainWindow);

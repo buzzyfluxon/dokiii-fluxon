@@ -43,6 +43,7 @@ const App: React.FC = () => {
   const openDokiiiApp = useConfigStore((s) => s.openDokiiiApp);
   const closeDokiiiApp = useConfigStore((s) => s.closeDokiiiApp);
   const closeOverlays = useConfigStore((s) => s.closeOverlays);
+  const toggleDockHidden = useConfigStore((s) => s.toggleDockHidden);
   const setUpdaterStatus = useUpdaterStore((s) => s.setUpdaterStatus);
   const hydrateUpdater = useUpdaterStore((s) => s.hydrate);
 
@@ -85,6 +86,14 @@ const App: React.FC = () => {
     const removeConfigChanged = window.electronAPI?.onDockConfigChanged((cfg) => {
       updateConfig(cfg);
     });
+    const removeToggleDock = window.electronAPI?.onToggleDock?.(() => {
+      const willHide = !useConfigStore.getState().dockHidden;
+      toggleDockHidden();
+      if (willHide) {
+        closePopover();
+        window.electronAPI?.setIgnoreMouseEvents(true, true);
+      }
+    });
 
     hydrateUpdater();
     const removeUpdaterStatus = window.electronAPI?.onUpdaterStatus?.((status) => {
@@ -99,9 +108,10 @@ const App: React.FC = () => {
       removeShowApp?.();
       removeCloseApp?.();
       removeConfigChanged?.();
+      removeToggleDock?.();
       removeUpdaterStatus?.();
     };
-  }, [toggleWidgetLibrary, toggleSettings, openDokiiiApp, closeDokiiiApp, updateConfig, hydrateUpdater, setUpdaterStatus]);
+  }, [toggleWidgetLibrary, toggleSettings, openDokiiiApp, closeDokiiiApp, updateConfig, toggleDockHidden, closePopover, hydrateUpdater, setUpdaterStatus]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

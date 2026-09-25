@@ -11,7 +11,7 @@ import {
   DEFAULT_DESKTOP_WIDGETS,
 } from '../../shared/constants';
 import { useWidgetStore } from './widgetStore';
-import { findFreeSpot, getDockReservedRect } from '../utils/widgetPlacement';
+import { findFreeSpot, fitWidgetResize, getDockReservedRect } from '../utils/widgetPlacement';
 
 export type DokiiiAppTab =
   | 'home'
@@ -32,6 +32,7 @@ interface ConfigState {
   isDokiiiAppOpen: boolean;
   activeAppTab: DokiiiAppTab;
   notice: string | null;
+  dockHidden: boolean;
   initialized: boolean;
   updateConfig: (partial: Partial<DockConfig>) => void;
   toggleWidgetLibrary: () => void;
@@ -42,13 +43,14 @@ interface ConfigState {
   setActiveAppTab: (tab: DokiiiAppTab) => void;
   closeOverlays: () => void;
   showNotice: (message: string) => void;
+  toggleDockHidden: () => void;
   addPinnedApp: (app: DockAppItem) => void;
   removePinnedApp: (id: string) => void;
   reorderPinnedApps: (apps: DockAppItem[]) => void;
   addDesktopWidget: (type: DesktopWidgetType, size?: DesktopWidgetSize) => boolean;
   removeDesktopWidget: (id: string) => void;
   updateDesktopWidgetPos: (id: string, x: number, y: number) => void;
-  setDesktopWidgetSize: (id: string, size: DesktopWidgetSize) => void;
+  setDesktopWidgetSize: (id: string, size: DesktopWidgetSize) => boolean;
   updateDesktopWidgetData: (id: string, data: Partial<DesktopWidgetItem>) => void;
   resetDesktopWidgetPositions: () => void;
   toggleDesktopWidgetsVisible: () => void;
@@ -71,6 +73,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   isDokiiiAppOpen: false,
   activeAppTab: 'home',
   notice: null,
+  dockHidden: false,
   initialized: false,
   updateConfig: (partial) => {
     const newDock = { ...get().dock, ...partial };
@@ -128,6 +131,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   setActiveAppTab: (tab) => set({ activeAppTab: tab }),
   closeOverlays: () =>
     set({ isWidgetLibraryOpen: false, isSettingsOpen: false, isDokiiiAppOpen: false }),
+  toggleDockHidden: () => set((s) => ({ dockHidden: !s.dockHidden })),
   showNotice: (message) => {
     if (noticeTimer) clearTimeout(noticeTimer);
     set({ notice: message });
@@ -187,8 +191,18 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   },
   setDesktopWidgetSize: (id, size) => {
     const current = get().dock.desktopWidgets || [];
-    const updated = current.map((w) => (w.id === id ? { ...w, size } : w));
+    const winW = window.innerWidth || 1920;
+    const winH = window.innerHeight || 1080;
+    const spot = fitWidgetResize(current, id, size, winW, winH);
+    if (!spot) {
+      get().showNotice("No space for this size. Move or remove a widget first.");
+      return false;
+    }
+    const updated = current.map((w) =>
+      w.id === id ? { ...w, size, x: spot.x, y: spot.y, width: undefined, height: undefined } : w
+    );
     get().updateConfig({ desktopWidgets: updated });
+    return true;
   },
   updateDesktopWidgetData: (id, data) => {
     const current = get().dock.desktopWidgets || [];

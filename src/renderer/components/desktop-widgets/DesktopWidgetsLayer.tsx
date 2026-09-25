@@ -26,6 +26,7 @@ import { MovieCardWidget } from './MovieCardWidget';
 import { PolaroidWidget } from './PolaroidWidget';
 import { GalleryWidget } from './GalleryWidget';
 import { MoodBoardWidget } from './MoodBoardWidget';
+import { Rect, findFreeSpot, getDockReservedRect, rectsOverlap, resolveWidgetRect } from '../../utils/widgetPlacement';
 import './desktop-widgets.css';
 
 const BASE_SIZE: Record<DesktopWidgetSize, { width: number; height: number; padding: number }> = {
@@ -120,6 +121,39 @@ export const DesktopWidgetsLayer: React.FC = () => {
     setSizes(initialSizes);
   }, [widgets, activeResize]);
 
+  useEffect(() => {
+    const refit = () => {
+      if (activeDragId || activeResize) return;
+      const winW = window.innerWidth || 1920;
+      const winH = window.innerHeight || 1080;
+      const current = useConfigStore.getState().dock.desktopWidgets || [];
+      let changed = false;
+      const nextPositions: Record<string, { x: number; y: number }> = {};
+
+      current.forEach((w) => {
+        const rect = resolveWidgetRect(w, winW, winH);
+        const outOfBounds =
+          rect.x < 0 || rect.y < 0 || rect.x + rect.width > winW || rect.y + rect.height > winH;
+        if (outOfBounds) {
+          const clampedX = Math.max(10, Math.min(winW - rect.width - 10, rect.x));
+          const clampedY = Math.max(10, Math.min(winH - rect.height - 10, rect.y));
+          nextPositions[w.id] = { x: Math.round(clampedX), y: Math.round(clampedY) };
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        const updated = current.map((w) => (nextPositions[w.id] ? { ...w, ...nextPositions[w.id] } : w));
+        useConfigStore.getState().updateConfig({ desktopWidgets: updated });
+        setPositions((prev) => ({ ...prev, ...nextPositions }));
+      }
+    };
+
+    refit();
+    window.addEventListener('resize', refit);
+    return () => window.removeEventListener('resize', refit);
+  }, [activeDragId, activeResize]);
+
   const handlePointerDown = (id: string, e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     const targetWidget = widgets.find((w) => w.id === id);
@@ -195,7 +229,6 @@ export const DesktopWidgetsLayer: React.FC = () => {
 
   const handleResize = (id: string, newSize: DesktopWidgetSize) => {
     setDesktopWidgetSize(id, newSize);
-    updateDesktopWidgetData(id, { width: undefined, height: undefined });
     closeContextMenu();
   };
 
@@ -270,9 +303,26 @@ export const DesktopWidgetsLayer: React.FC = () => {
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch (_) {}
-    const { id } = activeResize;
+    const { id, startW, startH, startPosX, startPosY } = activeResize;
     const finalSize = sizes[id];
     const finalPos = positions[id];
+    if (finalSize && finalPos) {
+      const winW = window.innerWidth || 1920;
+      const winH = window.innerHeight || 1080;
+      const startRect: Rect = { x: startPosX, y: startPosY, width: startW, height: startH };
+      const nextRect: Rect = { x: finalPos.x, y: finalPos.y, width: finalSize.width, height: finalSize.height };
+      const blocked = widgets
+        .filter((w) => w.id !== id)
+        .map((w) => resolveWidgetRect(w, winW, winH))
+        .some((rect) => rectsOverlap(nextRect, rect) && !rectsOverlap(startRect, rect));
+      if (blocked) {
+        setSizes((prev) => ({ ...prev, [id]: { width: startW, height: startH } }));
+        setPositions((prev) => ({ ...prev, [id]: { x: startPosX, y: startPosY } }));
+        useConfigStore.getState().showNotice("No space to resize here. It would cover another widget.");
+        setActiveResize(null);
+        return;
+      }
+    }
     if (finalSize) {
       updateDesktopWidgetData(id, {
         width: Math.round(finalSize.width),
@@ -292,10 +342,10 @@ export const DesktopWidgetsLayer: React.FC = () => {
   };
 
   const handleResetWidget = (id: string) => {
+    const winW = window.innerWidth || 1920;
+    const winH = window.innerHeight || 1080;
     const defaultWidget = DEFAULT_DESKTOP_WIDGETS.find((w) => w.id === id);
     if (defaultWidget) {
-      const winW = window.innerWidth || 1920;
-      const winH = window.innerHeight || 1080;
       let x = defaultWidget.x;
       let y = defaultWidget.y;
       if (x < 0) x = winW + x;
@@ -308,8 +358,31 @@ export const DesktopWidgetsLayer: React.FC = () => {
         height: undefined,
       });
       setPositions((prev) => ({ ...prev, [id]: { x, y } }));
+      setSizes((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
     } else {
-      updateDesktopWidgetData(id, { width: undefined, height: undefined });
+      const current = widgets.find((w) => w.id === id);
+      const size = current?.size || 'small';
+      const others = widgets.filter((w) => w.id !== id);
+      const reserved = dock.autoHide
+        ? null
+        : getDockReservedRect(dock.position || 'bottom', dock.size || 64, winW, winH);
+      const spot = findFreeSpot(others, size, winW, winH, reserved);
+      if (spot) {
+        updateDesktopWidgetData(id, { x: spot.x, y: spot.y, width: undefined, height: undefined });
+        setPositions((prev) => ({ ...prev, [id]: { x: spot.x, y: spot.y } }));
+      } else {
+        updateDesktopWidgetData(id, { width: undefined, height: undefined });
+        useConfigStore.getState().showNotice("No free space to reset this widget's position.");
+      }
+      setSizes((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
     }
     closeContextMenu();
   };

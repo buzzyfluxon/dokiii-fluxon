@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useWidgetStore } from '../store/widgetStore';
 import { useConfigStore } from '../store/configStore';
 import { useLiquidGlassStore } from '../store/liquidGlassStore';
@@ -26,6 +26,9 @@ import ScreenshotCaptureWidget from '../widgets/ScreenshotCaptureWidget';
 import MacIcon from './MacIcon';
 import AddAppModal from './AddAppModal';
 import useDockMagnification from '../hooks/useDockMagnification';
+
+const VERTICAL_WIDGET_SLOT = 44;
+const MIN_VERTICAL_SCALE = 0.5;
 
 const DayProgress = () => <ProgressWidget type="day" />;
 const MonthProgress = () => <ProgressWidget type="month" />;
@@ -55,6 +58,7 @@ export const Dock: React.FC = () => {
   const { enabledWidgets, widgetOrder } = useWidgetStore();
   const {
     dock,
+    dockHidden,
     toggleDokiiiApp,
     openDokiiiApp,
     toggleWidgetLibrary,
@@ -65,6 +69,10 @@ export const Dock: React.FC = () => {
   const { dragProps, dragOverId, draggedId, isDragging } = useDragReorder();
 
   const [isHovered, setIsHovered] = useState(false);
+  const [viewport, setViewport] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1920,
+    height: typeof window !== 'undefined' ? window.innerHeight : 1080,
+  });
   const [bouncingAppId, setBouncingAppId] = useState<string | null>(null);
   const [isAddAppOpen, setIsAddAppOpen] = useState(false);
   const [appContextMenu, setAppContextMenu] = useState<{
@@ -78,6 +86,7 @@ export const Dock: React.FC = () => {
   } | null>(null);
 
   const dockRef = useRef<HTMLDivElement>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const position = dock.position || 'bottom';
   const baseSize = dock.size || 64;
@@ -89,15 +98,53 @@ export const Dock: React.FC = () => {
   const sortedWidgets = Array.from(new Set(widgetOrder)).filter((id) => enabledWidgets.includes(id));
   const pinnedApps = dock.pinnedApps || [];
 
-  const totalItemCount = 1 + pinnedApps.length + 1 + (sortedWidgets.length > 0 ? 1 : 0) + sortedWidgets.length;
-  const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
-  const maxAllowedWidth = screenWidth - 48;
-  const defaultTotalWidth = totalItemCount * (baseSize + (dock.widgetSpacing ?? 4));
-  const needsCompact = position === 'bottom' && defaultTotalWidth > maxAllowedWidth;
-  const effectiveBaseSize = needsCompact
-    ? Math.max(38, Math.min(baseSize, Math.floor((maxAllowedWidth - 80) / Math.max(1, totalItemCount))))
-    : baseSize;
-  const effectiveSpacing = needsCompact ? 2 : (dock.widgetSpacing ?? 4);
+  const widgetCount = sortedWidgets.length;
+  const totalItemCount = 1 + pinnedApps.length + 1 + (widgetCount > 0 ? 1 : 0) + widgetCount;
+  const isVerticalDock = position === 'left' || position === 'right';
+  const spacing = dock.widgetSpacing ?? 4;
+
+  const getVerticalContentHeight = (scale: number, gap: number) => {
+    const iconSlot = Math.round(baseSize * scale * 0.72) + 4;
+    const widgetSlot = Math.round(VERTICAL_WIDGET_SLOT * scale) + 4;
+    const childCount = 2 + pinnedApps.length + (widgetCount > 0 ? 1 : 0) + widgetCount + Math.max(0, widgetCount - 1);
+    return (
+      36 +
+      32 +
+      (widgetCount > 0 ? 9 : 0) +
+      pinnedApps.length * iconSlot +
+      widgetCount * widgetSlot +
+      Math.max(0, widgetCount - 1) * 5 +
+      Math.max(0, childCount - 1) * gap
+    );
+  };
+
+  const maxAllowedWidth = viewport.width - 48;
+  const defaultTotalWidth = totalItemCount * (baseSize + spacing);
+  const needsCompactHorizontal = position === 'bottom' && defaultTotalWidth > maxAllowedWidth;
+
+  let verticalScale = 1;
+  if (isVerticalDock) {
+    const maxAllowedHeight = viewport.height * 0.92 - 16;
+    if (getVerticalContentHeight(1, spacing) > maxAllowedHeight) {
+      verticalScale = MIN_VERTICAL_SCALE;
+      for (let s = 0.98; s >= MIN_VERTICAL_SCALE; s -= 0.02) {
+        if (getVerticalContentHeight(s, 2) <= maxAllowedHeight) {
+          verticalScale = s;
+          break;
+        }
+      }
+    }
+  }
+  const needsCompactVertical = isVerticalDock && verticalScale < 1;
+
+  let effectiveBaseSize = baseSize;
+  if (needsCompactHorizontal) {
+    effectiveBaseSize = Math.max(38, Math.min(baseSize, Math.floor((maxAllowedWidth - 80) / Math.max(1, totalItemCount))));
+  } else if (needsCompactVertical) {
+    effectiveBaseSize = Math.max(20, Math.round(baseSize * verticalScale));
+  }
+  const effectiveSpacing = needsCompactHorizontal || needsCompactVertical ? 2 : spacing;
+  const verticalWidgetSlot = Math.max(22, Math.round(VERTICAL_WIDGET_SLOT * verticalScale));
 
   const { onPointerEnter, onPointerMove, onPointerLeave, hoveredItem } = useDockMagnification({
     dockRef,
@@ -111,18 +158,51 @@ export const Dock: React.FC = () => {
   const isAutoHideEnabled = dock.autoHide || dock.showOnHover;
   const isVisible = isHovered || activePopover !== null || isAddAppOpen || appContextMenu !== null;
 
-  const handleContainerPointerEnter = () => {
+  const clearHideTimer = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  };
+
+  useEffect(() => clearHideTimer, []);
+
+  useEffect(() => {
+    const handleResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const releaseHover = () => {
+    setIsHovered(false);
+    if (!activePopover && !isAddAppOpen && !appContextMenu) {
+      window.electronAPI?.setIgnoreMouseEvents(true, true);
+    }
+  };
+
+  const scheduleRelease = () => {
+    clearHideTimer();
+    if (isAutoHideEnabled) {
+      hideTimer.current = setTimeout(releaseHover, 250);
+    } else {
+      releaseHover();
+    }
+  };
+
+  const handleEdgePointerEnter = () => {
+    clearHideTimer();
     setIsHovered(true);
     window.electronAPI?.setIgnoreMouseEvents(false);
+  };
+
+  const handleContainerPointerEnter = () => {
+    handleEdgePointerEnter();
     onPointerEnter();
   };
 
   const handleContainerPointerLeave = () => {
-    setIsHovered(false);
     onPointerLeave();
-    if (!activePopover && !isAddAppOpen && !appContextMenu) {
-      window.electronAPI?.setIgnoreMouseEvents(true, true);
-    }
+    scheduleRelease();
   };
 
   const handleLaunchApp = (appItem: DockAppItem) => {
@@ -185,7 +265,7 @@ export const Dock: React.FC = () => {
         flexDirection: 'column',
         height: 'max-content',
         maxHeight: '92vh',
-        width: `${baseSize + 12}px`,
+        width: `${Math.max(effectiveBaseSize + 12, 44)}px`,
         overflow: 'visible',
       };
     }
@@ -198,7 +278,7 @@ export const Dock: React.FC = () => {
         flexDirection: 'column',
         height: 'max-content',
         maxHeight: '92vh',
-        width: `${baseSize + 12}px`,
+        width: `${Math.max(effectiveBaseSize + 12, 44)}px`,
         overflow: 'visible',
       };
     }
@@ -215,8 +295,17 @@ export const Dock: React.FC = () => {
     };
   };
 
+  if (dockHidden) return null;
+
   return (
     <>
+      {isAutoHideEnabled && (
+        <div
+          className={`dock-edge-trigger dock-edge-${position}`}
+          onPointerEnter={handleEdgePointerEnter}
+          onPointerLeave={scheduleRelease}
+        />
+      )}
       <div
         ref={dockRef}
         className={`dock-container macos-dock-style dock-${position}${isAutoHideEnabled ? ' auto-hide' : ''}${isAutoHideEnabled && isVisible ? ' visible' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
@@ -231,6 +320,7 @@ export const Dock: React.FC = () => {
           ...getDockPositionStyle(),
           borderRadius: `${dock.cornerRadius || 22}px`,
           gap: `${effectiveSpacing}px`,
+          ['--dock-slot' as string]: `${verticalWidgetSlot}px`,
           backdropFilter: `blur(${dock.blur || 50}px) saturate(180%)`,
           WebkitBackdropFilter: `blur(${dock.blur || 50}px) saturate(180%)`,
           opacity: isAutoHideEnabled && !isVisible ? 0 : 1,
@@ -266,7 +356,7 @@ export const Dock: React.FC = () => {
               onContextMenu={(e) => handleAppContextMenu(e, app.id)}
             >
               <div className="macos-icon-wrapper">
-                <MacIcon app={app} size={Math.round(baseSize * 0.72)} live={dock.liveIcons ?? true} />
+                <MacIcon app={app} size={Math.round(effectiveBaseSize * 0.72)} live={dock.liveIcons ?? true} />
               </div>
               {dock.showIndicators !== false && app.running && <div className="macos-running-dot" />}
             </div>

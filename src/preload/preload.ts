@@ -28,10 +28,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   captureScreenshot: (mode: string) => ipcRenderer.invoke('screenshot:capture', mode),
   getConfig: () => ipcRenderer.invoke('config:get'),
   saveConfig: (config: any) => ipcRenderer.invoke('config:save', config),
-  setAlwaysOnTop: (value: boolean) => ipcRenderer.invoke('window:setAlwaysOnTop', value),
   setAutoHide: (value: boolean) => ipcRenderer.invoke('window:setAutoHide', value),
-  setLaunchAtStartup: (value: boolean) => ipcRenderer.invoke('startup:setLaunchAtStartup', value),
-  getLaunchAtStartup: () => ipcRenderer.invoke('startup:getLaunchAtStartup'),
+  getDisplays: () => ipcRenderer.invoke('window:getDisplays'),
   showWidgetLibrary: () => ipcRenderer.invoke('window:showWidgetLibrary'),
   showSettings: () => ipcRenderer.invoke('window:showSettings'),
   setModalOpen: (isOpen: boolean) => ipcRenderer.invoke('window:setModalOpen', isOpen),
@@ -63,6 +61,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = () => callback();
     ipcRenderer.on('dock:closeApp', handler);
     return () => ipcRenderer.removeListener('dock:closeApp', handler);
+  },
+  onToggleDock: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('dock:toggleVisibility', handler);
+    return () => ipcRenderer.removeListener('dock:toggleVisibility', handler);
   },
   showUninstall: () => ipcRenderer.invoke('setup:showUninstall'),
   getScreenshotsDir: () => ipcRenderer.invoke('filesystem:getScreenshotsDir'),
