@@ -610,6 +610,49 @@ export const DokiiiApp: React.FC = () => {
           </div>
         </div>
       </div>
+      <div className="dokiii-card">
+        <span className="dokiii-card-title">Music Ambient</span>
+
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Music Ambient</span>
+            <span className="dokiii-row-desc">Soft, drifting gradients around the Dock, tinted by the current album artwork</span>
+          </div>
+          <div
+            className={`dokiii-toggle ${dock.musicAmbient?.enabled ? 'active' : ''}`}
+            onClick={() => {
+              const musicAmbient = dock.musicAmbient || { enabled: false, intensity: 'medium' as const };
+              updateConfig({ musicAmbient: { ...musicAmbient, enabled: !musicAmbient.enabled } });
+            }}
+          >
+            <div className="dokiii-toggle-handle" />
+          </div>
+        </div>
+
+        {dock.musicAmbient?.enabled && (
+          <div className="dokiii-row">
+            <div className="dokiii-row-label">
+              <span className="dokiii-row-name">Ambient Intensity</span>
+              <span className="dokiii-row-desc">How strong the glow and drift feel</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(['low', 'medium', 'high'] as const).map((level) => (
+                <button
+                  key={level}
+                  className={`dokiii-btn ${(dock.musicAmbient?.intensity || 'medium') === level ? 'primary' : 'secondary'}`}
+                  onClick={() => {
+                    const musicAmbient = dock.musicAmbient || { enabled: true, intensity: 'medium' as const };
+                    updateConfig({ musicAmbient: { ...musicAmbient, intensity: level } });
+                  }}
+                  style={{ fontSize: '11px', padding: '6px 12px', textTransform: 'capitalize' }}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 
