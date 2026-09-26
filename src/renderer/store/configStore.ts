@@ -34,6 +34,8 @@ interface ConfigState {
   notice: string | null;
   dockHidden: boolean;
   initialized: boolean;
+  launchOnStartup: boolean;
+  setLaunchOnStartup: (enabled: boolean) => void;
   updateConfig: (partial: Partial<DockConfig>) => void;
   toggleWidgetLibrary: () => void;
   toggleSettings: () => void;
@@ -75,6 +77,15 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   notice: null,
   dockHidden: false,
   initialized: false,
+  launchOnStartup: false,
+  setLaunchOnStartup: (enabled) => {
+    set({ launchOnStartup: enabled });
+    try {
+      window.electronAPI.setLaunchOnStartup(enabled).then((confirmed) => {
+        set({ launchOnStartup: confirmed });
+      });
+    } catch (_) {}
+  },
   updateConfig: (partial) => {
     const newDock = { ...get().dock, ...partial };
     set({ dock: newDock });
@@ -310,6 +321,12 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     }
   },
   init: async () => {
+    try {
+      window.electronAPI
+        .getLaunchOnStartup()
+        .then((enabled) => set({ launchOnStartup: Boolean(enabled) }))
+        .catch(() => {});
+    } catch (_) {}
     try {
       const config = await window.electronAPI.getConfig();
       const loadedProfiles =

@@ -37,6 +37,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setIgnoreMouseEvents: (ignore: boolean, forward?: boolean) => ipcRenderer.invoke('window:setIgnoreMouseEvents', ignore, forward),
   hideWindow: () => ipcRenderer.invoke('window:hide'),
   quitApp: () => ipcRenderer.invoke('app:quit'),
+  getLaunchOnStartup: () => ipcRenderer.invoke('app:getLaunchOnStartup'),
+  setLaunchOnStartup: (enabled: boolean) => ipcRenderer.invoke('app:setLaunchOnStartup', enabled),
   onDockConfigChanged: (callback: (config: any) => void) => {
     const handler = (_event: any, config: any) => callback(config);
     ipcRenderer.on('dock:configChanged', handler);

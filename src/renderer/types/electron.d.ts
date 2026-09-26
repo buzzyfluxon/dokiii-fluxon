@@ -54,6 +54,8 @@ export interface ElectronAPI {
   setIgnoreMouseEvents(ignore: boolean, forward?: boolean): Promise<void>;
   hideWindow(): Promise<void>;
   quitApp(): Promise<void>;
+  getLaunchOnStartup(): Promise<boolean>;
+  setLaunchOnStartup(enabled: boolean): Promise<boolean>;
   onDockConfigChanged(callback: (config: DockConfig) => void): () => void;
   onShowWidgetLibrary(callback: () => void): () => void;
   onShowSettings(callback: () => void): () => void;

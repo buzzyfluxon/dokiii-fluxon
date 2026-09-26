@@ -7,7 +7,7 @@ import AddAppModal from './AddAppModal';
 import MacIcon from './MacIcon';
 
 export const Settings: React.FC = () => {
-  const { dock, updateConfig, toggleSettings, removePinnedApp } = useConfigStore();
+  const { dock, updateConfig, toggleSettings, removePinnedApp, launchOnStartup, setLaunchOnStartup } = useConfigStore();
   const [isAddAppOpen, setIsAddAppOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [displays, setDisplays] = useState<{ index: number; id: number; isPrimary: boolean; width: number; height: number }[]>([]);
@@ -103,6 +103,21 @@ export const Settings: React.FC = () => {
           </div>
 
           <div className="settings-content" style={{ maxHeight: '72vh', overflowY: 'auto' }}>
+            <div className="settings-section">
+              <div className="settings-section-title">General</div>
+
+              <div className="setting-row">
+                <div>
+                  <div className="setting-label">Launch at Startup</div>
+                  <div className="setting-desc">Automatically start DOKIII when you sign in to Windows</div>
+                </div>
+                <button
+                  className={`setting-toggle${launchOnStartup ? ' on' : ''}`}
+                  onClick={() => setLaunchOnStartup(!launchOnStartup)}
+                />
+              </div>
+            </div>
+
             <div className="settings-section">
               <div className="settings-section-title">Size and Magnification</div>
 

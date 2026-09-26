@@ -33,6 +33,8 @@ export const DokiiiApp: React.FC = () => {
     setDesktopWidgetSize,
     resetDesktopWidgetPositions,
     toggleDesktopWidgetsVisible,
+    launchOnStartup,
+    setLaunchOnStartup,
   } = useConfigStore();
 
   const { enabledWidgets, toggleWidget } = useWidgetStore();
@@ -610,49 +612,6 @@ export const DokiiiApp: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="dokiii-card">
-        <span className="dokiii-card-title">Music Ambient</span>
-
-        <div className="dokiii-row">
-          <div className="dokiii-row-label">
-            <span className="dokiii-row-name">Music Ambient</span>
-            <span className="dokiii-row-desc">Soft, drifting gradients around the Dock, tinted by the current album artwork</span>
-          </div>
-          <div
-            className={`dokiii-toggle ${dock.musicAmbient?.enabled ? 'active' : ''}`}
-            onClick={() => {
-              const musicAmbient = dock.musicAmbient || { enabled: false, intensity: 'medium' as const };
-              updateConfig({ musicAmbient: { ...musicAmbient, enabled: !musicAmbient.enabled } });
-            }}
-          >
-            <div className="dokiii-toggle-handle" />
-          </div>
-        </div>
-
-        {dock.musicAmbient?.enabled && (
-          <div className="dokiii-row">
-            <div className="dokiii-row-label">
-              <span className="dokiii-row-name">Ambient Intensity</span>
-              <span className="dokiii-row-desc">How strong the glow and drift feel</span>
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {(['low', 'medium', 'high'] as const).map((level) => (
-                <button
-                  key={level}
-                  className={`dokiii-btn ${(dock.musicAmbient?.intensity || 'medium') === level ? 'primary' : 'secondary'}`}
-                  onClick={() => {
-                    const musicAmbient = dock.musicAmbient || { enabled: true, intensity: 'medium' as const };
-                    updateConfig({ musicAmbient: { ...musicAmbient, intensity: level } });
-                  }}
-                  style={{ fontSize: '11px', padding: '6px 12px', textTransform: 'capitalize' }}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 
@@ -832,6 +791,19 @@ export const DokiiiApp: React.FC = () => {
 
         <div className="dokiii-row">
           <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Launch at Startup</span>
+            <span className="dokiii-row-desc">Automatically start DOKIII when you sign in to Windows</span>
+          </div>
+          <div
+            className={`dokiii-toggle ${launchOnStartup ? 'active' : ''}`}
+            onClick={() => setLaunchOnStartup(!launchOnStartup)}
+          >
+            <div className="dokiii-toggle-handle" />
+          </div>
+        </div>
+
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
             <span className="dokiii-row-name">Running App Indicators</span>
             <span className="dokiii-row-desc">Display glowing dot beneath currently open applications</span>
           </div>
@@ -859,6 +831,46 @@ export const DokiiiApp: React.FC = () => {
             <div className="dokiii-toggle-handle" />
           </div>
         </div>
+
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Music Ambient</span>
+            <span className="dokiii-row-desc">Soft, drifting gradients around the Dock, tinted by the current album artwork</span>
+          </div>
+          <div
+            className={`dokiii-toggle ${dock.musicAmbient?.enabled ? 'active' : ''}`}
+            onClick={() => {
+              const musicAmbient = dock.musicAmbient || { enabled: false, intensity: 'medium' as const };
+              updateConfig({ musicAmbient: { ...musicAmbient, enabled: !musicAmbient.enabled } });
+            }}
+          >
+            <div className="dokiii-toggle-handle" />
+          </div>
+        </div>
+
+        {dock.musicAmbient?.enabled && (
+          <div className="dokiii-row">
+            <div className="dokiii-row-label">
+              <span className="dokiii-row-name">Ambient Intensity</span>
+              <span className="dokiii-row-desc">How strong the glow and drift feel</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(['low', 'medium', 'high'] as const).map((level) => (
+                <button
+                  key={level}
+                  className={`dokiii-btn ${(dock.musicAmbient?.intensity || 'medium') === level ? 'primary' : 'secondary'}`}
+                  onClick={() => {
+                    const musicAmbient = dock.musicAmbient || { enabled: true, intensity: 'medium' as const };
+                    updateConfig({ musicAmbient: { ...musicAmbient, intensity: level } });
+                  }}
+                  style={{ fontSize: '11px', padding: '6px 12px', textTransform: 'capitalize' }}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="dokiii-card">

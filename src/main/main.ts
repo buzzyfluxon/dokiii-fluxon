@@ -303,6 +303,23 @@ function createWindow() {
   });
 }
 
+function getLaunchOnStartup(): boolean {
+  return app.getLoginItemSettings({ args: ['--startup'] }).openAtLogin;
+}
+
+function setLaunchOnStartup(enabled: boolean): boolean {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: enabled,
+      path: process.execPath,
+      args: ['--startup'],
+    });
+  } catch (err: any) {
+    logDebug('failed to set login item settings: ' + (err?.stack || err));
+  }
+  return getLaunchOnStartup();
+}
+
 function registerSetupHandlers() {
   ipcMain.handle('setup:showUninstall', () => {
     launchUninstaller();
@@ -398,6 +415,14 @@ function registerConfigHandlers() {
 
   ipcMain.handle('window:hide', () => {
     if (mainWindow) mainWindow.hide();
+  });
+
+  ipcMain.handle('app:getLaunchOnStartup', () => {
+    return getLaunchOnStartup();
+  });
+
+  ipcMain.handle('app:setLaunchOnStartup', (_, enabled: boolean) => {
+    return setLaunchOnStartup(enabled);
   });
 
   ipcMain.handle('app:quit', () => {
