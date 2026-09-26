@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/showcase-banner.png" alt="DOKIII Preview" width="100%" />
-</p>
+
 
 <p align="center">
   <img src="assets/app-logo.png" alt="DOKIII Logo" width="96" />
