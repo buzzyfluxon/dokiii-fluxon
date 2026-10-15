@@ -1,4 +1,4 @@
-import { app, ipcMain, shell, dialog } from 'electron';
+import { app, ipcMain, shell, dialog, net, nativeImage } from 'electron';
 import { runPowerShell } from '../utils/powershell';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -166,6 +166,51 @@ let cachedBinCount = 0;
 let lastBinCountTime = 0;
 let batteryEmptyStreak = 0;
 
+function toIconDataUrl(image: Electron.NativeImage): string | null {
+  if (image.isEmpty()) return null;
+  const { width } = image.getSize();
+  if (width < 16) return null;
+  const out = width > 128 ? image.resize({ width: 128, quality: 'best' }) : image;
+  return out.toDataURL();
+}
+
+async function downloadIcon(url: string): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    const res = await net.fetch(url, { signal: controller.signal });
+    if (!res.ok) return null;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    if (buffer.length < 80) return null;
+    return toIconDataUrl(nativeImage.createFromBuffer(buffer));
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchSiteIcon(rawUrl: string): Promise<string | null> {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname;
+  const requests = [
+    downloadIcon(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`),
+    downloadIcon(`https://icons.duckduckgo.com/ip3/${encodeURIComponent(host)}.ico`),
+    downloadIcon(`${parsed.origin}/apple-touch-icon.png`),
+    downloadIcon(`${parsed.origin}/favicon.ico`),
+  ];
+  for (const request of requests) {
+    const result = await request;
+    if (result) return result;
+  }
+  return null;
+}
+
 export function registerSystemHandlers() {
   ipcMain.handle('system:getStorageInfo', async () => {
     try {
@@ -302,6 +347,28 @@ export function registerSystemHandlers() {
         return { name, path: filePath, icon: iconData };
       }
       return null;
+    } catch {
+      return null;
+    }
+  });
+
+  ipcMain.handle('system:fetchFavicon', async (_, url: string) => {
+    try {
+      return await fetchSiteIcon(url);
+    } catch {
+      return null;
+    }
+  });
+
+  ipcMain.handle('system:pickIconImage', async () => {
+    try {
+      const result = await dialog.showOpenDialog({
+        title: 'Select Icon',
+        properties: ['openFile'],
+        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'ico'] }],
+      });
+      if (result.canceled || result.filePaths.length === 0) return null;
+      return toIconDataUrl(nativeImage.createFromPath(result.filePaths[0]));
     } catch {
       return null;
     }

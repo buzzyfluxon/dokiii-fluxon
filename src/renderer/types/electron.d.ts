@@ -15,6 +15,8 @@ export interface ElectronAPI {
   selectAppFile(): Promise<{ name: string; path: string; icon?: string } | null>;
   getAppIcon(filePath: string): Promise<string | null>;
   selectImageFile(): Promise<string | null>;
+  fetchFavicon(url: string): Promise<string | null>;
+  pickIconImage(): Promise<string | null>;
   getRecentItems(): Promise<RecentItem[]>;
   getDownloads(): Promise<DownloadFile[]>;
   getRecentScreenshots(): Promise<ScreenshotFile[]>;

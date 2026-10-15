@@ -3,6 +3,7 @@ import { useConfigStore } from '../store/configStore';
 import { AppInfo } from '../types/widget';
 import { DockAppItem } from '../../shared/constants';
 import { IconClose, IconSearch, IconPlus } from './Icons';
+import AddWebsiteModal from './AddWebsiteModal';
 
 interface AddAppModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => 
   const [installedApps, setInstalledApps] = useState<AppInfo[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [websiteOpen, setWebsiteOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -89,7 +91,25 @@ export const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => 
           </button>
         </div>
 
-        <div style={{ padding: '0 24px 16px' }}>
+        <div style={{ padding: '0 24px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <button
+            className="btn-primary"
+            onClick={() => setWebsiteOpen(true)}
+            style={{
+              width: '100%',
+              padding: '12px 20px',
+              fontSize: '13px',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+            }}
+          >
+            <IconPlus size={16} />
+            <span>Add Website...</span>
+          </button>
           <button
             className="btn-primary"
             onClick={handleBrowseFile}
@@ -218,6 +238,13 @@ export const AddAppModal: React.FC<AddAppModalProps> = ({ isOpen, onClose }) => 
           )}
         </div>
       </div>
+      <AddWebsiteModal
+        isOpen={websiteOpen}
+        onClose={() => {
+          setWebsiteOpen(false);
+          onClose();
+        }}
+      />
     </div>
   );
 };

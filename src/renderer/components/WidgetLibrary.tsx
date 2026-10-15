@@ -3,8 +3,9 @@ import { useWidgetStore } from '../store/widgetStore';
 import { useConfigStore } from '../store/configStore';
 import { useLiquidGlassStore } from '../store/liquidGlassStore';
 import { WIDGET_REGISTRY, WIDGET_CATEGORIES, WidgetCategory, WidgetId } from '../../shared/constants';
-import { WidgetIcon, IconSearch, IconClose, IconMinus, IconMaximize, IconRestore } from './Icons';
+import { WidgetIcon, IconSearch, IconGlobe, IconClose, IconMinus, IconMaximize, IconRestore } from './Icons';
 import dokiiiLogo from '../assets/dokiii-logo.jpg';
+import AddWebsiteModal from './AddWebsiteModal';
 
 const WidgetLibrary: React.FC = () => {
   const { enabledWidgets, toggleWidget } = useWidgetStore();
@@ -14,6 +15,10 @@ const WidgetLibrary: React.FC = () => {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<WidgetCategory | 'all'>('all');
   const [isMaximized, setIsMaximized] = useState(false);
+  const [websiteOpen, setWebsiteOpen] = useState(false);
+  const showWebsiteCard =
+    (activeCategory === 'all' || activeCategory === 'apps-files') &&
+    (!search || 'website shortcut link web'.includes(search.toLowerCase()));
 
   const filtered = useMemo(() => {
     return WIDGET_REGISTRY.filter((w) => {
@@ -126,6 +131,41 @@ const WidgetLibrary: React.FC = () => {
         </div>
 
         <div className="wl-content">
+          {showWebsiteCard && (
+            <div>
+              <div className="wl-section-title">
+                <span>Shortcuts</span>
+              </div>
+              <div className="wl-grid">
+                <div className="wl-widget-card">
+                  <div className="wl-widget-icon">
+                    <IconGlobe size={22} />
+                  </div>
+                  <span className="wl-widget-name">Website</span>
+                  <span className="wl-widget-desc">Pin any website to the dock with its own icon</span>
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '6px', width: '100%' }}>
+                    <button
+                      type="button"
+                      style={{
+                        flex: 1,
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: '#0a84ff',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                      onClick={() => setWebsiteOpen(true)}
+                    >
+                      + Dock
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {Object.entries(grouped).map(([label, widgets]) => (
             <div key={label}>
               <div className="wl-section-title">
@@ -186,7 +226,7 @@ const WidgetLibrary: React.FC = () => {
               </div>
             </div>
           ))}
-          {Object.keys(grouped).length === 0 && (
+          {Object.keys(grouped).length === 0 && !showWebsiteCard && (
             <div className="empty-state" style={{ padding: '48px' }}>
               <IconSearch size={28} color="var(--text-tertiary)" />
               <span style={{ marginTop: '8px' }}>No widgets found</span>
@@ -194,6 +234,7 @@ const WidgetLibrary: React.FC = () => {
           )}
         </div>
       </div>
+      <AddWebsiteModal isOpen={websiteOpen} onClose={() => setWebsiteOpen(false)} />
     </div>
   );
 };

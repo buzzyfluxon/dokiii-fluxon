@@ -33,7 +33,7 @@ export const MacIcon: React.FC<MacIconProps> = ({ app, size = 48, live = true })
 
   useEffect(() => {
     let isMounted = true;
-    if (app.iconType === 'custom' && app.path && window.electronAPI?.getAppIcon) {
+    if (app.iconType === 'custom' && app.path && !/^https?:/i.test(app.path) && window.electronAPI?.getAppIcon) {
       window.electronAPI
         .getAppIcon(app.path)
         .then((icon) => {
