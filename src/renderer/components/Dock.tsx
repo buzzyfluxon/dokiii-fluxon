@@ -347,19 +347,21 @@ export const Dock: React.FC = () => {
         {pinnedApps.map((app) => {
           const isBouncing = bouncingAppId === app.id;
           return (
-            <div
-              key={app.id}
-              data-dock-item={app.id}
-              data-dock-title={app.name}
-              className={`macos-app-slot${isBouncing ? ' app-bouncing' : ''}`}
-              onClick={() => handleLaunchApp(app)}
-              onContextMenu={(e) => handleAppContextMenu(e, app.id)}
-            >
-              <div className="macos-icon-wrapper">
-                <MacIcon app={app} size={Math.round(effectiveBaseSize * 0.72)} live={dock.liveIcons ?? true} />
+            <React.Fragment key={app.id}>
+              {app.separatorBefore && <div className="widget-separator macos-separator" />}
+              <div
+                data-dock-item={app.id}
+                data-dock-title={app.name}
+                className={`macos-app-slot${isBouncing ? ' app-bouncing' : ''}`}
+                onClick={() => handleLaunchApp(app)}
+                onContextMenu={(e) => handleAppContextMenu(e, app.id)}
+              >
+                <div className="macos-icon-wrapper">
+                  <MacIcon app={app} size={Math.round(effectiveBaseSize * 0.72)} live={dock.liveIcons ?? true} />
+                </div>
+                {dock.showIndicators !== false && app.running && <div className="macos-running-dot" />}
               </div>
-              {dock.showIndicators !== false && app.running && <div className="macos-running-dot" />}
-            </div>
+            </React.Fragment>
           );
         })}
 

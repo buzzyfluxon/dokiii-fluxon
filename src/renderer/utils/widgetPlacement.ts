@@ -77,9 +77,10 @@ export const findFreeSpot = (
   size: DesktopWidgetSize,
   winW: number,
   winH: number,
-  reserved: Rect | null
+  reserved: Rect | null,
+  customDims?: { width: number; height: number }
 ): { x: number; y: number } | null => {
-  const target = DESKTOP_WIDGET_SIZES[size] || DESKTOP_WIDGET_SIZES.small;
+  const target = customDims || DESKTOP_WIDGET_SIZES[size] || DESKTOP_WIDGET_SIZES.small;
 
   const occupied: Rect[] = widgets.map((w) => {
     const dims = DESKTOP_WIDGET_SIZES[w.size] || DESKTOP_WIDGET_SIZES.small;

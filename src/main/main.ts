@@ -347,6 +347,7 @@ function registerConfigHandlers() {
       notes: store.get('notes'),
       profiles: store.get('profiles'),
       activeProfileId: store.get('activeProfileId'),
+      seededPresets: store.get('seededPresets'),
     };
   });
 

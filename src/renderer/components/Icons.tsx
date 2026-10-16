@@ -293,6 +293,15 @@ export const WidgetIcon: React.FC<{ id: string; size?: number; color?: string; c
       return <IconNote size={size} color={color} className={className} />;
     case 'travel-card':
       return <IconGlobe size={size} color={color} className={className} />;
+    case 'weather':
+      return <IconGlobe size={size} color={color} className={className} />;
+    case 'big-date':
+    case 'digital-clock':
+      return <IconClock size={size} color={color} className={className} />;
+    case 'photo-card':
+      return <IconCamera size={size} color={color} className={className} />;
+    case 'music-card':
+      return <IconMusic size={size} color={color} className={className} />;
     case 'book-card':
     case 'movie-card':
     case 'polaroid':

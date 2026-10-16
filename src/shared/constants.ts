@@ -1,3 +1,5 @@
+import { PRESET_IMAGES, glyphDataUrl } from './presetAssets';
+
 export const WIDGET_IDS = {
   STORAGE: 'storage',
   CURRENCY: 'currency',
@@ -34,6 +36,11 @@ export const WIDGET_IDS = {
   POLAROID: 'polaroid',
   GALLERY: 'gallery',
   MOOD_BOARD: 'mood-board',
+  WEATHER: 'weather',
+  BIG_DATE: 'big-date',
+  DIGITAL_CLOCK: 'digital-clock',
+  PHOTO_CARD: 'photo-card',
+  MUSIC_CARD: 'music-card',
 } as const;
 
 export type WidgetId = (typeof WIDGET_IDS)[keyof typeof WIDGET_IDS];
@@ -57,7 +64,13 @@ export type DesktopWidgetType =
   | 'movie-card'
   | 'polaroid'
   | 'gallery'
-  | 'mood-board';
+  | 'mood-board'
+  | 'weather'
+  | 'big-date'
+  | 'digital-clock'
+  | 'photo-card'
+  | 'music-card'
+  | 'app-icon';
 
 export type DesktopWidgetSize = 'small' | 'medium' | 'large';
 
@@ -65,6 +78,15 @@ export const DESKTOP_WIDGET_SIZES: Record<DesktopWidgetSize, { width: number; he
   small: { width: 144, height: 144 },
   medium: { width: 304, height: 144 },
   large: { width: 304, height: 304 },
+};
+
+export const DESKTOP_WIDGET_DEFAULT_DIMS: Partial<Record<DesktopWidgetType, { width: number; height: number }>> = {
+  weather: { width: 212, height: 216 },
+  'big-date': { width: 436, height: 216 },
+  'digital-clock': { width: 100, height: 110 },
+  'photo-card': { width: 212, height: 110 },
+  'music-card': { width: 212, height: 116 },
+  'app-icon': { width: 100, height: 116 },
 };
 
 export interface DesktopWidgetItem {
@@ -149,6 +171,11 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
   { id: WIDGET_IDS.POLAROID, name: 'Polaroid', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'One photo in a Polaroid-style frame', placement: 'desktop' },
   { id: WIDGET_IDS.GALLERY, name: 'Gallery', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A simple 2x2 photo grid', placement: 'desktop' },
   { id: WIDGET_IDS.MOOD_BOARD, name: 'Mood Board', category: 'personal', icon: 'note', defaultWidth: 'compact', description: 'A 2-6 image collage', placement: 'desktop' },
+  { id: WIDGET_IDS.WEATHER, name: 'Weather', category: 'system', icon: 'globe', defaultWidth: 'normal', description: 'Live temperature, hourly and 5-day forecast for any city', placement: 'desktop' },
+  { id: WIDGET_IDS.BIG_DATE, name: 'Big Date & Time', category: 'time', icon: 'clock', defaultWidth: 'wide', description: 'Weekday, date and oversized stacked time with battery pill', placement: 'desktop' },
+  { id: WIDGET_IDS.DIGITAL_CLOCK, name: 'Digital Clock Tile', category: 'time', icon: 'clock', defaultWidth: 'compact', description: 'Framed digital clock with a city label', placement: 'desktop' },
+  { id: WIDGET_IDS.PHOTO_CARD, name: 'Photo Card', category: 'personal', icon: 'camera', defaultWidth: 'normal', description: 'Edge-to-edge photo, optional black and white. Double-click to change', placement: 'desktop' },
+  { id: WIDGET_IDS.MUSIC_CARD, name: 'Music Card', category: 'media', icon: 'music', defaultWidth: 'normal', description: 'Now playing with play button and album strip', placement: 'desktop' },
 ];
 
 export const DEFAULT_ENABLED_WIDGETS: WidgetId[] = [
@@ -178,6 +205,9 @@ export interface DockAppItem {
   color?: string;
   icon?: string;
   running?: boolean;
+  mono?: boolean;
+  fill?: boolean;
+  separatorBefore?: boolean;
 }
 
 export const DEFAULT_PINNED_APPS: DockAppItem[] = [
@@ -279,6 +309,48 @@ export interface WidgetProfile {
   dockConfig?: Partial<DockConfig>;
 }
 
+
+const RIGHT = -684;
+const COL = (n: number) => RIGHT + n * 112;
+
+export const IPAD_MONO_PINNED_APPS: DockAppItem[] = [
+  { id: 'messages', name: 'Messages', path: 'https://messages.google.com/web', iconType: 'custom', icon: glyphDataUrl('messages'), mono: true },
+  { id: 'safari', name: 'Safari', path: 'https://www.google.com', iconType: 'custom', icon: glyphDataUrl('safari'), mono: true },
+  { id: 'music', name: 'Music', path: 'https://music.youtube.com', iconType: 'custom', icon: glyphDataUrl('music'), mono: true },
+  { id: 'mail', name: 'Mail', path: 'https://mail.google.com', iconType: 'custom', icon: glyphDataUrl('mail'), mono: true },
+  { id: 'calendar', name: 'Calendar', path: 'calendar', iconType: 'calendar', mono: true },
+  { id: 'photos', name: 'Photos', path: 'ms-photos:', iconType: 'custom', icon: glyphDataUrl('photos'), mono: true },
+  { id: 'notes-app', name: 'Notes', path: 'https://keep.google.com', iconType: 'custom', icon: glyphDataUrl('notes'), mono: true },
+  { id: 'spotify', name: 'Spotify', path: 'spotify', iconType: 'custom', icon: glyphDataUrl('spotify'), mono: true, separatorBefore: true },
+  { id: 'pinterest', name: 'Pinterest', path: 'https://www.pinterest.com', iconType: 'custom', icon: glyphDataUrl('pinterest'), mono: true },
+  { id: 'genshin', name: 'Genshin Impact', path: 'https://genshin.hoyoverse.com/en', iconType: 'custom', icon: PRESET_IMAGES.anime, mono: true, fill: true },
+  { id: 'apps-library', name: 'Apps', path: 'shell:AppsFolder', iconType: 'custom', icon: glyphDataUrl('apps'), mono: true },
+];
+
+export const IPAD_MONO_DESKTOP_WIDGETS: DesktopWidgetItem[] = [
+  { id: 'ipad-weather', type: 'weather', x: COL(0), y: 40, size: 'small', width: 212, height: 216, customTitle: 'Bengaluru' },
+  { id: 'ipad-big-date', type: 'big-date', x: COL(2), y: 40, size: 'small', width: 436, height: 216 },
+  { id: 'ipad-car', type: 'photo-card', x: COL(0), y: 268, size: 'small', width: 212, height: 110, data: { imageUrl: PRESET_IMAGES.car, grayscale: true } },
+  { id: 'ipad-tower', type: 'photo-card', x: COL(2), y: 268, size: 'small', width: 212, height: 110, data: { imageUrl: PRESET_IMAGES.tower, grayscale: true } },
+  { id: 'ipad-clock', type: 'digital-clock', x: COL(4), y: 268, size: 'small', width: 100, height: 110, customTitle: 'MUM', data: { timezone: 'Asia/Kolkata' } },
+  { id: 'ipad-spiderman', type: 'photo-card', x: COL(5), y: 268, size: 'small', width: 100, height: 110, data: { imageUrl: PRESET_IMAGES.spiderman, grayscale: true } },
+  { id: 'ipad-app-genshin', type: 'app-icon', x: COL(0), y: 390, size: 'small', width: 100, height: 116, customTitle: 'Genshin Impact', data: { glyph: 'image', icon: PRESET_IMAGES.anime, path: 'https://genshin.hoyoverse.com/en' } },
+  { id: 'ipad-app-spotify', type: 'app-icon', x: COL(1), y: 390, size: 'small', width: 100, height: 116, customTitle: 'Spotify', data: { glyph: 'spotify', path: 'spotify' } },
+  { id: 'ipad-app-instagram', type: 'app-icon', x: COL(2), y: 390, size: 'small', width: 100, height: 116, customTitle: 'Instagram', data: { glyph: 'instagram', path: 'https://www.instagram.com' } },
+  { id: 'ipad-app-pinterest', type: 'app-icon', x: COL(3), y: 390, size: 'small', width: 100, height: 116, customTitle: 'Pinterest', data: { glyph: 'pinterest', path: 'https://www.pinterest.com' } },
+  { id: 'ipad-music', type: 'music-card', x: COL(4), y: 390, size: 'small', width: 212, height: 116, data: { title: 'Desi Boyz', subtitle: 'Album \u2022 by Pritam' } },
+];
+
+export const PRESET_PROFILES: WidgetProfile[] = [
+  {
+    id: 'ipad-mono',
+    name: 'iPad Mono',
+    dockWidgets: [],
+    pinnedApps: IPAD_MONO_PINNED_APPS,
+    desktopWidgets: IPAD_MONO_DESKTOP_WIDGETS,
+  },
+];
+
 export const DEFAULT_PROFILES: WidgetProfile[] = [
   {
     id: 'default',
@@ -321,6 +393,7 @@ export const DEFAULT_PROFILES: WidgetProfile[] = [
       { id: 'min-date-day', type: 'date-day', x: -180, y: 200, size: 'small', customTitle: 'DOKIII' },
     ],
   },
+  ...PRESET_PROFILES,
 ];
 
 export const DEFAULT_WORLD_CLOCK_CITIES = [

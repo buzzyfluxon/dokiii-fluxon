@@ -26,6 +26,12 @@ import { MovieCardWidget } from './MovieCardWidget';
 import { PolaroidWidget } from './PolaroidWidget';
 import { GalleryWidget } from './GalleryWidget';
 import { MoodBoardWidget } from './MoodBoardWidget';
+import { WeatherWidget } from './WeatherWidget';
+import { BigDateWidget } from './BigDateWidget';
+import { DigitalClockWidget } from './DigitalClockWidget';
+import { PhotoCardWidget } from './PhotoCardWidget';
+import { MusicCardWidget } from './MusicCardWidget';
+import { AppIconWidget } from './AppIconWidget';
 import { Rect, findFreeSpot, getDockReservedRect, rectsOverlap, resolveWidgetRect } from '../../utils/widgetPlacement';
 import './desktop-widgets.css';
 
@@ -34,6 +40,11 @@ const BASE_SIZE: Record<DesktopWidgetSize, { width: number; height: number; padd
   medium: { ...DESKTOP_WIDGET_SIZES.medium, padding: 16 },
   large: { ...DESKTOP_WIDGET_SIZES.large, padding: 18 },
 };
+
+const FILL_TYPES = new Set<string>(['weather', 'big-date', 'digital-clock', 'photo-card', 'music-card', 'app-icon']);
+const BARE_TYPES = new Set<string>(['app-icon']);
+const TAP_DISTANCE = 5;
+const DOUBLE_TAP_MS = 380;
 
 const MIN_WIDGET_WIDTH = 100;
 const MIN_WIDGET_HEIGHT = 80;
@@ -85,6 +96,8 @@ export const DesktopWidgetsLayer: React.FC = () => {
     currentValue: string;
   } | null>(null);
   const [promptInput, setPromptInput] = useState('');
+  const downPoint = useRef<{ x: number; y: number } | null>(null);
+  const lastTap = useRef<{ id: string; time: number } | null>(null);
 
   const widgets = dock.desktopWidgets || [];
   const isVisible = dock.desktopWidgetsVisible !== false;
@@ -156,6 +169,7 @@ export const DesktopWidgetsLayer: React.FC = () => {
 
   const handlePointerDown = (id: string, e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
+    downPoint.current = { x: e.clientX, y: e.clientY };
     const targetWidget = widgets.find((w) => w.id === id);
     if (targetWidget?.locked) return;
     const current = positions[id] || { x: 50, y: 50 };
@@ -192,7 +206,45 @@ export const DesktopWidgetsLayer: React.FC = () => {
     }));
   };
 
+  const pickPhoto = async (item: DesktopWidgetItem) => {
+    try {
+      const url = await window.electronAPI?.selectImageFile?.();
+      if (url) {
+        updateDesktopWidgetData(item.id, { data: { ...(item.data || {}), imageUrl: url } });
+      }
+    } catch (_) {}
+  };
+
+  const handleTap = (id: string) => {
+    const item = widgets.find((w) => w.id === id);
+    if (!item) return;
+    if (item.type === 'app-icon') {
+      const target = String(item.data?.path || '');
+      if (!target) return;
+      if (/^https?:/i.test(target)) {
+        window.electronAPI?.openUrl(target);
+      } else {
+        window.electronAPI?.launchApp(target);
+      }
+      return;
+    }
+    if (item.type === 'photo-card') {
+      const now = Date.now();
+      const previous = lastTap.current;
+      if (previous && previous.id === id && now - previous.time < DOUBLE_TAP_MS) {
+        lastTap.current = null;
+        pickPhoto(item);
+      } else {
+        lastTap.current = { id, time: now };
+      }
+    }
+  };
+
   const handlePointerUp = (id: string, e: React.PointerEvent<HTMLDivElement>) => {
+    const start = downPoint.current;
+    downPoint.current = null;
+    const moved = start ? Math.hypot(e.clientX - start.x, e.clientY - start.y) > TAP_DISTANCE : true;
+    if (!moved) handleTap(id);
     if (activeDragId === id) {
       try {
         (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
@@ -408,8 +460,27 @@ export const DesktopWidgetsLayer: React.FC = () => {
     }
   };
 
-  const renderWidgetContent = (item: DesktopWidgetItem) => {
+  const renderWidgetContent = (item: DesktopWidgetItem, dims: { width: number; height: number }) => {
     switch (item.type) {
+      case 'weather':
+        return <WeatherWidget width={dims.width} height={dims.height} city={item.customTitle} />;
+      case 'big-date':
+        return <BigDateWidget width={dims.width} height={dims.height} />;
+      case 'digital-clock':
+        return (
+          <DigitalClockWidget
+            width={dims.width}
+            height={dims.height}
+            label={item.customTitle}
+            timezone={item.data?.timezone}
+          />
+        );
+      case 'photo-card':
+        return <PhotoCardWidget width={dims.width} height={dims.height} data={item.data} />;
+      case 'music-card':
+        return <MusicCardWidget width={dims.width} height={dims.height} data={item.data} />;
+      case 'app-icon':
+        return <AppIconWidget width={dims.width} height={dims.height} label={item.customTitle} data={item.data} />;
       case 'world-clock':
         return <WorldClockWidget size={item.size} customTitle={item.customTitle} city={item.city} />;
       case 'date-day':
@@ -537,11 +608,13 @@ export const DesktopWidgetsLayer: React.FC = () => {
 
         const isDragging = activeDragId === item.id;
         const isResizing = activeResize?.id === item.id;
+        const isFill = FILL_TYPES.has(item.type);
+        const isBare = BARE_TYPES.has(item.type);
 
         return (
           <div
             key={item.id}
-            className={`desktop-widget-container size-${item.size} ${isDragging ? 'is-dragging' : ''} ${isResizing ? 'is-resizing' : ''} ${item.locked ? 'is-locked' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
+            className={`desktop-widget-container size-${item.size} type-${item.type}${isBare ? ' is-bare' : ''} ${isDragging ? 'is-dragging' : ''} ${isResizing ? 'is-resizing' : ''} ${item.locked ? 'is-locked' : ''}${isLiquidGlass ? ' liquid-glass-active' : ''}`}
             style={{
               left: `${pos.x}px`,
               top: `${pos.y}px`,
@@ -551,7 +624,7 @@ export const DesktopWidgetsLayer: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              ...(isLiquidGlass && desktopSample
+              ...(isLiquidGlass && desktopSample && !isBare
                 ? {
                     background: desktopSample.bgRgba,
                     borderColor: desktopSample.borderColor,
@@ -578,17 +651,22 @@ export const DesktopWidgetsLayer: React.FC = () => {
           >
             <div
               className="desktop-widget-content-scaler"
-              style={{
-                width: `${base.width}px`,
-                height: `${base.height}px`,
-                padding: `${base.padding}px`,
-                transform: `scale(${uniformScale})`,
-                flexShrink: 0,
-              }}
+              style={
+                isFill
+                  ? { width: `${dims.width}px`, height: `${dims.height}px`, padding: 0, flexShrink: 0 }
+                  : {
+                      width: `${base.width}px`,
+                      height: `${base.height}px`,
+                      padding: `${base.padding}px`,
+                      transform: `scale(${uniformScale})`,
+                      flexShrink: 0,
+                    }
+              }
             >
-              {renderWidgetContent(item)}
+              {renderWidgetContent(item, dims)}
             </div>
             {!item.locked &&
+              item.type !== 'app-icon' &&
               RESIZE_HANDLES.map(({ dir, className }) => (
                 <div
                   key={dir}

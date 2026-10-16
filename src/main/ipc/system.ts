@@ -3,6 +3,7 @@ import { runPowerShell } from '../utils/powershell';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
+import * as crypto from 'crypto';
 
 let prevCpus = os.cpus();
 let cachedSsd = 50;
@@ -347,6 +348,37 @@ export function registerSystemHandlers() {
         return { name, path: filePath, icon: iconData };
       }
       return null;
+    } catch {
+      return null;
+    }
+  });
+
+  ipcMain.handle('system:cacheImage', async (_, url: string) => {
+    try {
+      if (!/^https?:\/\//i.test(url || '')) return null;
+      const dir = path.join(app.getPath('userData'), 'image-cache');
+      fs.mkdirSync(dir, { recursive: true });
+      const key = crypto.createHash('sha1').update(url).digest('hex');
+      const file = path.join(dir, key);
+      const mimeFile = `${file}.mime`;
+      if (fs.existsSync(file) && fs.existsSync(mimeFile)) {
+        const cachedMime = fs.readFileSync(mimeFile, 'utf8');
+        return `data:${cachedMime};base64,${fs.readFileSync(file).toString('base64')}`;
+      }
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 12000);
+      try {
+        const res = await net.fetch(url, { signal: controller.signal });
+        if (!res.ok) return null;
+        const mime = (res.headers.get('content-type') || '').split(';')[0].trim();
+        if (!mime.startsWith('image/')) return null;
+        const buffer = Buffer.from(await res.arrayBuffer());
+        fs.writeFileSync(file, buffer);
+        fs.writeFileSync(mimeFile, mime);
+        return `data:${mime};base64,${buffer.toString('base64')}`;
+      } finally {
+        clearTimeout(timer);
+      }
     } catch {
       return null;
     }

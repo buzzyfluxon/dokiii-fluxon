@@ -32,6 +32,28 @@
   transform: translateZ(0);
 }
 
+.desktop-widget-container.type-weather,
+.desktop-widget-container.type-big-date,
+.desktop-widget-container.type-digital-clock,
+.desktop-widget-container.type-music-card {
+  background: rgba(14, 14, 17, 0.86);
+  border-radius: 20px;
+}
+
+.desktop-widget-container.type-photo-card {
+  border-radius: 20px;
+  background: #16161a;
+}
+
+.desktop-widget-container.is-bare {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+}
+
 .desktop-widget-container:active {
   cursor: grabbing;
 }

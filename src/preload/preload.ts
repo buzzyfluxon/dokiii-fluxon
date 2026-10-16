@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectAppFile: () => ipcRenderer.invoke('system:selectAppFile'),
   getAppIcon: (filePath: string) => ipcRenderer.invoke('system:getAppIcon', filePath),
   selectImageFile: () => ipcRenderer.invoke('system:selectImageFile'),
+  cacheImage: (url: string) => ipcRenderer.invoke('system:cacheImage', url),
   fetchFavicon: (url: string) => ipcRenderer.invoke('system:fetchFavicon', url),
   pickIconImage: () => ipcRenderer.invoke('system:pickIconImage'),
   getRecentItems: () => ipcRenderer.invoke('filesystem:getRecentItems'),

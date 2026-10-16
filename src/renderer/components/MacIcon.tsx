@@ -3,6 +3,7 @@ import type { DockAppItem } from '../../shared/constants';
 import photosIcon from '../assets/photos-icon.jpg';
 
 import { useClockAngles, useTimeStore } from '../store/timeStore';
+import { useCachedImage } from '../hooks/useCachedImage';
 
 interface MacIconProps {
   app: DockAppItem;
@@ -33,7 +34,7 @@ export const MacIcon: React.FC<MacIconProps> = ({ app, size = 48, live = true })
 
   useEffect(() => {
     let isMounted = true;
-    if (app.iconType === 'custom' && app.path && !/^https?:/i.test(app.path) && window.electronAPI?.getAppIcon) {
+    if (app.iconType === 'custom' && app.path && !app.mono && !/^https?:/i.test(app.path) && window.electronAPI?.getAppIcon) {
       window.electronAPI
         .getAppIcon(app.path)
         .then((icon) => {
@@ -56,6 +57,8 @@ export const MacIcon: React.FC<MacIconProps> = ({ app, size = 48, live = true })
     }
   }, [app.icon, app.path, app.iconType]);
 
+  const cachedIcon = useCachedImage(dynamicIcon || app.icon);
+
   const cornerRadius = Math.round(size * 0.22);
 
   const containerStyle: React.CSSProperties = {
@@ -71,6 +74,35 @@ export const MacIcon: React.FC<MacIconProps> = ({ app, size = 48, live = true })
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.35)',
     flexShrink: 0,
   };
+
+  if (app.iconType === 'calendar' && app.mono) {
+    return (
+      <div
+        style={{
+          ...containerStyle,
+          background: 'linear-gradient(150deg, #3b3b40 0%, #151517 100%)',
+          border: '0.5px solid rgba(255, 255, 255, 0.18)',
+          flexDirection: 'column',
+          gap: `${Math.round(size * 0.02)}px`,
+        }}
+      >
+        <div
+          style={{
+            color: 'rgba(255, 255, 255, 0.62)',
+            fontSize: `${Math.max(7, Math.round(size * 0.17))}px`,
+            fontWeight: 700,
+            letterSpacing: '0.4px',
+            lineHeight: 1,
+          }}
+        >
+          {dateInfo.weekday.charAt(0) + dateInfo.weekday.slice(1).toLowerCase()}
+        </div>
+        <div style={{ color: '#ffffff', fontSize: `${Math.round(size * 0.46)}px`, fontWeight: 600, lineHeight: 1 }}>
+          {dateInfo.day}
+        </div>
+      </div>
+    );
+  }
 
   if (app.iconType === 'calendar') {
     return (
@@ -398,14 +430,39 @@ export const MacIcon: React.FC<MacIconProps> = ({ app, size = 48, live = true })
     );
   }
 
-  const iconToRender = dynamicIcon || app.icon;
+  const iconToRender = cachedIcon;
 
   if (iconToRender) {
+    if (app.fill) {
+      return (
+        <div
+          style={{
+            ...containerStyle,
+            background: 'linear-gradient(150deg, #3b3b40 0%, #151517 100%)',
+            border: '0.5px solid rgba(255, 255, 255, 0.2)',
+          }}
+        >
+          <img
+            src={iconToRender}
+            alt={app.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              filter: app.mono ? 'grayscale(1)' : 'none',
+            }}
+            draggable={false}
+          />
+        </div>
+      );
+    }
     return (
       <div
         style={{
           ...containerStyle,
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%)',
+          background: app.mono
+            ? 'linear-gradient(150deg, #3b3b40 0%, #151517 100%)'
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           border: '0.5px solid rgba(255, 255, 255, 0.2)',
@@ -415,10 +472,10 @@ export const MacIcon: React.FC<MacIconProps> = ({ app, size = 48, live = true })
           src={iconToRender}
           alt={app.name}
           style={{
-            width: `${Math.round(size * 0.74)}px`,
-            height: `${Math.round(size * 0.74)}px`,
+            width: `${Math.round(size * (app.mono ? 0.62 : 0.74))}px`,
+            height: `${Math.round(size * (app.mono ? 0.62 : 0.74))}px`,
             objectFit: 'contain',
-            filter: 'drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4))',
+            filter: `${app.mono ? 'grayscale(1) ' : ''}drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4))`,
           }}
           draggable={false}
         />

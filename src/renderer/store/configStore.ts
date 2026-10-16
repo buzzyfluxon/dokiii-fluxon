@@ -8,7 +8,9 @@ import {
   DesktopWidgetSize,
   WidgetProfile,
   DEFAULT_PROFILES,
+  PRESET_PROFILES,
   DEFAULT_DESKTOP_WIDGETS,
+  DESKTOP_WIDGET_DEFAULT_DIMS,
 } from '../../shared/constants';
 import { useWidgetStore } from './widgetStore';
 import { findFreeSpot, fitWidgetResize, getDockReservedRect } from '../utils/widgetPlacement';
@@ -175,7 +177,8 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     const reserved = dock.autoHide
       ? null
       : getDockReservedRect(dock.position || 'bottom', dock.size || 64, winW, winH);
-    const spot = findFreeSpot(current, size, winW, winH, reserved);
+    const customDims = DESKTOP_WIDGET_DEFAULT_DIMS[type];
+    const spot = findFreeSpot(current, size, winW, winH, reserved, customDims);
     if (!spot) {
       get().showNotice("No space left on the desktop. This widget can't be added.");
       return false;
@@ -186,6 +189,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
       x: spot.x,
       y: spot.y,
       size,
+      ...(customDims ? { width: customDims.width, height: customDims.height } : {}),
     };
     get().updateConfig({ desktopWidgets: [...current, newItem] });
     return true;
@@ -329,8 +333,19 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     } catch (_) {}
     try {
       const config = await window.electronAPI.getConfig();
-      const loadedProfiles =
+      const baseProfiles =
         config?.profiles && config.profiles.length > 0 ? config.profiles : DEFAULT_PROFILES;
+      const seededIds: string[] = (config as any)?.seededPresets || [];
+      const missingPresets = PRESET_PROFILES.filter(
+        (preset) => !seededIds.includes(preset.id) && !baseProfiles.some((p) => p.id === preset.id)
+      );
+      const loadedProfiles = missingPresets.length ? [...baseProfiles, ...missingPresets] : baseProfiles;
+      if (missingPresets.length || seededIds.length === 0) {
+        const nextSeeded = Array.from(new Set([...seededIds, ...PRESET_PROFILES.map((p) => p.id)]));
+        try {
+          window.electronAPI.saveConfig({ profiles: loadedProfiles, seededPresets: nextSeeded } as any);
+        } catch (_) {}
+      }
       const loadedActiveId =
         config?.activeProfileId || (config?.dock as any)?.activeProfileId || 'default';
       if (config?.dock) {

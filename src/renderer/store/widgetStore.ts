@@ -75,6 +75,7 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
     try {
       const config = await window.electronAPI.getConfig();
       const rawEnabled = config?.enabledWidgets || DEFAULT_ENABLED_WIDGETS;
+      const hasSavedEnabled = Array.isArray(config?.enabledWidgets);
       const validEnabled = Array.from(new Set(rawEnabled)).filter((id): id is WidgetId =>
         allRegisteredIds.includes(id as WidgetId)
       );
@@ -88,7 +89,7 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
       const finalOrder = [...validOrder, ...missingFromOrder];
 
       set({
-        enabledWidgets: validEnabled.length ? validEnabled : DEFAULT_ENABLED_WIDGETS,
+        enabledWidgets: hasSavedEnabled || validEnabled.length ? validEnabled : DEFAULT_ENABLED_WIDGETS,
         widgetOrder: finalOrder,
         notes: config?.notes || [],
         initialized: true,
