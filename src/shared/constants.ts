@@ -257,6 +257,12 @@ export const DEFAULT_DOCK_CONFIG = {
     enabled: false,
     intensity: 'medium' as 'low' | 'medium' | 'high',
   },
+  snow: {
+    enabled: true,
+    intensity: 'medium' as 'low' | 'medium' | 'high',
+    snowballs: true,
+    onWindows: true,
+  },
   halo: {
     enabled: true,
     displayMode: 'always' as 'always' | 'active',
@@ -266,6 +272,20 @@ export const DEFAULT_DOCK_CONFIG = {
     showDownloads: true,
     showScreenshots: true,
   },
+};
+
+export interface SnowConfig {
+  enabled: boolean;
+  intensity: 'low' | 'medium' | 'high';
+  snowballs: boolean;
+  onWindows: boolean;
+}
+
+export const DEFAULT_SNOW_CONFIG: SnowConfig = {
+  enabled: true,
+  intensity: 'medium',
+  snowballs: true,
+  onWindows: true,
 };
 
 export interface MusicAmbientConfig {

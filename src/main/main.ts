@@ -9,6 +9,7 @@ import { registerMediaHandlers } from './ipc/media';
 import { registerProcessHandlers } from './ipc/process';
 import { registerScreenshotHandlers } from './ipc/screenshot';
 import { registerWallpaperHandlers, cleanupWallpaperWatcher } from './ipc/wallpaper';
+import { registerSnowHandlers } from './ipc/snow';
 import { initAutoUpdater, cleanupAutoUpdater } from './updater';
 import { killAllPowerShell } from './utils/powershell';
 import { PROFILE, instrumentIpc, startProfiler } from './utils/profiler';
@@ -54,6 +55,7 @@ app.on('before-quit', () => {
   isQuitting = true;
   cleanupWallpaperWatcher();
   cleanupAutoUpdater();
+  stopSnowTracking?.();
   killAllPowerShell();
   logDebug('before-quit fired');
 });
@@ -79,6 +81,7 @@ let tray: any = null;
 let isModalOpen = false;
 let isPopoverOpen = false;
 let isQuitting = false;
+let stopSnowTracking: (() => void) | null = null;
 
 function getPackagedBuildDir(): string | null {
   if (!app.isPackaged) return null;
@@ -468,6 +471,7 @@ if (!gotSingleInstanceLock) {
     registerConfigHandlers();
     registerSetupHandlers();
     registerWallpaperHandlers(() => mainWindow);
+    stopSnowTracking = registerSnowHandlers(() => mainWindow);
     initAutoUpdater(() => mainWindow);
 
     createWindow();

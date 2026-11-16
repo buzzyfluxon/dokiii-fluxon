@@ -6,6 +6,11 @@ directories:
 files:
   - dist/**/*
   - package.json
+  - "!node_modules/koffi/src/**"
+  - "!node_modules/koffi/doc/**"
+  - "!node_modules/koffi/build/koffi/!(win32_x64)/**"
+asarUnpack:
+  - node_modules/koffi/**
 extraResources:
   - from: build
     to: build

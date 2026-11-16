@@ -80,6 +80,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('wallpaper:colors-updated', handler);
     return () => ipcRenderer.removeListener('wallpaper:colors-updated', handler);
   },
+  setSnowActive: (active: boolean) => ipcRenderer.invoke('snow:setActive', active),
+  onSnowDesktopState: (callback: (state: any) => void) => {
+    const handler = (_event: any, state: any) => callback(state);
+    ipcRenderer.on('snow:desktopState', handler);
+    return () => ipcRenderer.removeListener('snow:desktopState', handler);
+  },
   appReady: () => ipcRenderer.send('app:ready'),
   checkForUpdates: (manual?: boolean) => ipcRenderer.invoke('updater:check', { manual }),
   startUpdateDownload: () => ipcRenderer.invoke('updater:download'),

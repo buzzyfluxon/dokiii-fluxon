@@ -9,6 +9,7 @@ import {
   WidgetId,
   DesktopWidgetType,
   DesktopWidgetSize,
+  DEFAULT_SNOW_CONFIG,
 } from '../../shared/constants';
 import { IconClose, IconMinus, IconMaximize, IconRestore, IconRefresh } from './Icons';
 import appIcon from '../assets/icon.png';
@@ -870,6 +871,83 @@ export const DokiiiApp: React.FC = () => {
               ))}
             </div>
           </div>
+        )}
+      </div>
+
+      <div className="dokiii-card">
+        <span className="dokiii-card-title">Snowfall</span>
+        <div className="dokiii-row">
+          <div className="dokiii-row-label">
+            <span className="dokiii-row-name">Snowfall</span>
+            <span className="dokiii-row-desc">Christmas snow that settles on the Dock, widgets and open windows</span>
+          </div>
+          <div
+            className={`dokiii-toggle ${dock.snow?.enabled !== false ? 'active' : ''}`}
+            onClick={() => {
+              const snow = { ...DEFAULT_SNOW_CONFIG, ...(dock.snow || {}) };
+              updateConfig({ snow: { ...snow, enabled: !snow.enabled } });
+            }}
+          >
+            <div className="dokiii-toggle-handle" />
+          </div>
+        </div>
+
+        {dock.snow?.enabled !== false && (
+          <>
+            <div className="dokiii-row">
+              <div className="dokiii-row-label">
+                <span className="dokiii-row-name">Snow Amount</span>
+                <span className="dokiii-row-desc">How many flakes fall at once</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {(['low', 'medium', 'high'] as const).map((level) => (
+                  <button
+                    key={level}
+                    className={`dokiii-btn ${(dock.snow?.intensity || 'medium') === level ? 'primary' : 'secondary'}`}
+                    onClick={() => {
+                      const snow = { ...DEFAULT_SNOW_CONFIG, ...(dock.snow || {}) };
+                      updateConfig({ snow: { ...snow, intensity: level } });
+                    }}
+                    style={{ fontSize: '11px', padding: '6px 12px', textTransform: 'capitalize' }}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="dokiii-row">
+              <div className="dokiii-row-label">
+                <span className="dokiii-row-name">Snowballs</span>
+                <span className="dokiii-row-desc">Snowballs form on the snow pile. Drag them around and stack three to build a snowman</span>
+              </div>
+              <div
+                className={`dokiii-toggle ${dock.snow?.snowballs !== false ? 'active' : ''}`}
+                onClick={() => {
+                  const snow = { ...DEFAULT_SNOW_CONFIG, ...(dock.snow || {}) };
+                  updateConfig({ snow: { ...snow, snowballs: !snow.snowballs } });
+                }}
+              >
+                <div className="dokiii-toggle-handle" />
+              </div>
+            </div>
+
+            <div className="dokiii-row">
+              <div className="dokiii-row-label">
+                <span className="dokiii-row-name">Snow on Windows</span>
+                <span className="dokiii-row-desc">Let snow settle on the top edge of windows sitting on the desktop</span>
+              </div>
+              <div
+                className={`dokiii-toggle ${dock.snow?.onWindows !== false ? 'active' : ''}`}
+                onClick={() => {
+                  const snow = { ...DEFAULT_SNOW_CONFIG, ...(dock.snow || {}) };
+                  updateConfig({ snow: { ...snow, onWindows: !snow.onWindows } });
+                }}
+              >
+                <div className="dokiii-toggle-handle" />
+              </div>
+            </div>
+          </>
         )}
       </div>
 

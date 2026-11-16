@@ -5,6 +5,7 @@ import { IconClose, IconPlus, IconTrash, IconMinus, IconMaximize, IconRestore } 
 import dokiiiLogo from '../assets/dokiii-logo.jpg';
 import AddAppModal from './AddAppModal';
 import MacIcon from './MacIcon';
+import { DEFAULT_SNOW_CONFIG } from '../../shared/constants';
 
 export const Settings: React.FC = () => {
   const { dock, updateConfig, toggleSettings, removePinnedApp, launchOnStartup, setLaunchOnStartup } = useConfigStore();
@@ -348,6 +349,88 @@ export const Settings: React.FC = () => {
                     ))}
                   </div>
                 </div>
+              )}
+            </div>
+
+            <div className="settings-section">
+              <div className="settings-section-title">Snowfall</div>
+
+              <div className="setting-row">
+                <div>
+                  <div className="setting-label">Snowfall</div>
+                  <div className="setting-desc">Christmas snow that settles on the Dock, widgets and open windows</div>
+                </div>
+                <button
+                  className={`setting-toggle${dock.snow?.enabled !== false ? ' on' : ''}`}
+                  onClick={() => {
+                    const snow = { ...DEFAULT_SNOW_CONFIG, ...(dock.snow || {}) };
+                    updateConfig({ snow: { ...snow, enabled: !snow.enabled } });
+                  }}
+                />
+              </div>
+
+              {dock.snow?.enabled !== false && (
+                <>
+                  <div className="setting-row">
+                    <div>
+                      <div className="setting-label">Snow Amount</div>
+                      <div className="setting-desc">How many flakes fall at once</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.06)', padding: '3px', borderRadius: '10px' }}>
+                      {(['low', 'medium', 'high'] as const).map((level) => (
+                        <button
+                          key={level}
+                          onClick={() => {
+                            const snow = { ...DEFAULT_SNOW_CONFIG, ...(dock.snow || {}) };
+                            updateConfig({ snow: { ...snow, intensity: level } });
+                          }}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: '7px',
+                            border: 'none',
+                            background: (dock.snow?.intensity || 'medium') === level ? '#0A84FF' : 'transparent',
+                            color: (dock.snow?.intensity || 'medium') === level ? '#ffffff' : 'rgba(255,255,255,0.6)',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            textTransform: 'capitalize',
+                            cursor: 'pointer',
+                            transition: 'all 160ms ease',
+                          }}
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="setting-row">
+                    <div>
+                      <div className="setting-label">Snowballs</div>
+                      <div className="setting-desc">Snowballs form on the snow pile. Drag them around and stack three to build a snowman</div>
+                    </div>
+                    <button
+                      className={`setting-toggle${dock.snow?.snowballs !== false ? ' on' : ''}`}
+                      onClick={() => {
+                        const snow = { ...DEFAULT_SNOW_CONFIG, ...(dock.snow || {}) };
+                        updateConfig({ snow: { ...snow, snowballs: !snow.snowballs } });
+                      }}
+                    />
+                  </div>
+
+                  <div className="setting-row">
+                    <div>
+                      <div className="setting-label">Snow on Windows</div>
+                      <div className="setting-desc">Let snow settle on the top edge of windows sitting on the desktop</div>
+                    </div>
+                    <button
+                      className={`setting-toggle${dock.snow?.onWindows !== false ? ' on' : ''}`}
+                      onClick={() => {
+                        const snow = { ...DEFAULT_SNOW_CONFIG, ...(dock.snow || {}) };
+                        updateConfig({ snow: { ...snow, onWindows: !snow.onWindows } });
+                      }}
+                    />
+                  </div>
+                </>
               )}
             </div>
 

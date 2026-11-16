@@ -73,6 +73,10 @@ You can also browse every version on the [Releases page](https://github.com/buzz
 - Turn desktop widgets on or off with a single switch.
 - Choose which widgets to show: System Monitor, Clocks, Calendar, Battery, Volume.
 
+### Snowfall (Christmas update)
+
+Turn on Snowfall in Settings to let snow drift across the desktop and settle in soft piles on the Dock, desktop widgets and the top edge of any window sitting on the desktop. Snowballs form on the piles now and then. Drag them around and stack three to build a snowman, and double-click a snowman to knock it back into snowballs. Snow pauses automatically while a maximized or full-screen app covers the desktop.
+
 ### Uninstalling
 Open the Control Center and choose **Uninstall**, or use **Uninstall DOKIII** in the tray menu. You can also remove it from Windows Settings under Installed apps.
 

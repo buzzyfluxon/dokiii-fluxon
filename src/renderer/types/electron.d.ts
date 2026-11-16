@@ -69,6 +69,8 @@ export interface ElectronAPI {
   getScreenshotsDir(): Promise<string>;
   getWallpaperColors(): Promise<WallpaperPalette>;
   onWallpaperColorsUpdated(callback: (palette: WallpaperPalette) => void): () => void;
+  setSnowActive(active: boolean): Promise<void>;
+  onSnowDesktopState(callback: (state: SnowDesktopState) => void): () => void;
   appReady?(): void;
   checkForUpdates(manual?: boolean): Promise<void>;
   startUpdateDownload(): Promise<void>;
@@ -86,6 +88,19 @@ export type UpdaterStatus =
   | { status: 'downloading'; version: string; percent: number }
   | { status: 'downloaded'; version: string }
   | { status: 'error'; message: string; phase: 'check' | 'download'; isManual: boolean };
+
+export interface SnowWindowEdge {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  spans: [number, number][];
+}
+
+export interface SnowDesktopState {
+  visible: boolean;
+  windows: SnowWindowEdge[];
+}
 
 export interface RegionSample {
   r: number;
